@@ -188,7 +188,7 @@
     
     <div class="status-bar loading" id="status-bar">
         <span class="status-dot"></span>
-        <span id="status-text">Iniciando sincronização...</span>
+        <span id="status-text">Iniciando sincronização no Vercel...</span>
     </div>
 
     <div class="container" id="main-container" style="display: none;">
@@ -204,7 +204,6 @@
     </div>
 
     <script>
-        // Tempos exatos (em horas decimais)
         const respawnRules = {
             "Selupan": 34.16667,
             "Nightmare": 40.16667,
@@ -217,16 +216,12 @@
 
         let activeBosses = [];
 
-        // NOVA FUNÇÃO BLINDADA COM REGEX
         function parseBrazilianDate(dateString) {
-            // Procura exatamente pelo padrão de números DD/MM/YYYY HH:MM:SS ignorando espaços invisíveis
             const match = dateString.match(/(\d{2})\/(\d{2})\/(\d{4})[^\d]+(\d{2}):(\d{2}):(\d{2})/);
             if (match) {
-                // match[1] = DD, match[2] = MM, match[3] = YYYY
-                // match[4] = HH, match[5] = MM, match[6] = SS
                 return new Date(match[3], match[2] - 1, match[1], match[4], match[5], match[6]);
             }
-            return new Date(); // Fallback de segurança
+            return new Date(); 
         }
 
         function formatSpawnDate(dateObj) {
@@ -238,24 +233,25 @@
             return `${day}/${month} às ${hours}:${minutes}`;
         }
 
-        // Sistema de captura
         async function fetchBossLogs() {
             const statusBar = document.getElementById('status-bar');
             const statusText = document.getElementById('status-text');
             
             statusBar.className = 'status-bar loading';
-            statusText.innerText = activeBosses.length === 0 ? "Buscando dados no Mega MU..." : "Atualizando radares...";
+            statusText.innerText = activeBosses.length === 0 ? "Buscando logs oficiais..." : "Sincronizando radares...";
             
             try {
-                const targetUrl = 'https://megamu.net/boss-log';
-                const proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(targetUrl);
-                
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 8000);
                 
-                const response = await fetch(proxyUrl, { signal: controller.signal });
+                // Mudança crucial aqui: apontamos para a SUA rota da API no Vercel
+                const response = await fetch('/api/bosses', { signal: controller.signal });
                 clearTimeout(timeoutId);
                 
+                if (!response.ok) {
+                    throw new Error("Erro no servidor do Vercel");
+                }
+
                 const htmlText = await response.text();
                 
                 const parser = new DOMParser();
@@ -263,7 +259,7 @@
                 const rows = doc.querySelectorAll('table tbody tr');
                 
                 if (rows.length === 0) {
-                    throw new Error("Tabela vazia ou bloqueada.");
+                    throw new Error("Tabela vazia ou bloqueada pelo anti-DDoS.");
                 }
 
                 const latestKills = {};
@@ -271,7 +267,6 @@
                 rows.forEach(row => {
                     const columns = row.querySelectorAll('td');
                     if (columns.length >= 5) {
-                        // Usando textContent para evitar bugs de leitura do DOMParser
                         const dateStr = columns[0].textContent.trim();
                         const bossName = columns[1].textContent.trim();
                         const killedBy = columns[2].textContent.trim();
@@ -299,7 +294,6 @@
                     }
                 });
 
-                // Ordena corretamente com a matemática blindada
                 activeBosses = Object.values(latestKills).sort((a, b) => a.spawnDate - b.spawnDate);
                 
                 statusBar.className = 'status-bar';
@@ -314,13 +308,9 @@
             } catch (error) {
                 statusBar.className = 'status-bar error';
                 if (activeBosses.length > 0) {
-                    statusText.innerText = "Falha ao atualizar. Mantendo dados...";
+                    statusText.innerText = "Falha ao conectar. Mantendo informações na tela...";
                 } else {
-                    if (error.name === 'AbortError') {
-                        statusText.innerText = "Timeout de conexão.";
-                    } else {
-                        statusText.innerText = "Erro ao carregar os dados.";
-                    }
+                    statusText.innerText = "Erro ao carregar os dados. Verifique a aba de Logs no Vercel.";
                 }
             }
         }
