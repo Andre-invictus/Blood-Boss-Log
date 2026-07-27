@@ -574,15 +574,20 @@
                     if (sheetJson.dailyScores) {
                         const guildLower = guildMembersList.map(n => n.toLowerCase());
                         for (let n in sheetJson.dailyScores) {
-                            if (!dailyScores[n]) {
-                                dailyScores[n] = {
-                                    player: n,
-                                    blue: sheetJson.dailyScores[n].blue,
-                                    red: sheetJson.dailyScores[n].red,
-                                    isGuild: guildLower.includes(n.toLowerCase()),
-                                    isOnline: false
-                                };
-                            }
+                            // CORREÇÃO: Garante que lê os pontos da planilha mesmo se vierem sem a letra 'k'
+                            let rawBlue = String(sheetJson.dailyScores[n].blue || "0.0");
+                            let rawRed = String(sheetJson.dailyScores[n].red || "0.0");
+                            
+                            let formattedBlue = rawBlue.includes('k') ? rawBlue : rawBlue + "k";
+                            let formattedRed = rawRed === "0.0" || rawRed === "0.0k" ? "0.0k" : (rawRed.includes('k') ? "-" + rawRed : "-" + rawRed + "k");
+
+                            dailyScores[n] = {
+                                player: n,
+                                blue: formattedBlue,
+                                red: formattedRed,
+                                isGuild: guildLower.includes(n.toLowerCase()),
+                                isOnline: false
+                            };
                         }
                     }
                     lastGasSyncTime = nowMs;
