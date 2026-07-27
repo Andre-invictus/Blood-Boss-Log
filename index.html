@@ -37,7 +37,7 @@
             width: 100%;
             background: radial-gradient(circle at top center, #1a0000 0%, var(--bg-dark) 80%);
             border-bottom: 2px solid var(--blood-red);
-            padding: 30px 0 20px 0;
+            padding: 30px 0 25px 0;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -48,7 +48,6 @@
         .logo-container img { 
             height: 160px; 
             object-fit: contain; 
-            margin-bottom: 20px;
             filter: drop-shadow(0 0 15px rgba(218, 0, 0, 0.3));
             transition: all 0.3s ease;
         }
@@ -57,37 +56,54 @@
             .logo-container img { height: 90px; }
         }
 
-        .status-badge {
-            background-color: rgba(218, 0, 0, 0.1);
+        /* BOTÃO DE LOGIN ADM NO TOPO */
+        .admin-trigger {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: var(--bg-panel);
             border: 1px solid var(--blood-red);
             color: var(--blood-red);
-            padding: 6px 16px;
-            border-radius: 30px;
-            font-size: 0.85rem;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            box-shadow: 0 0 10px rgba(218, 0, 0, 0.2);
+            padding: 6px 14px;
+            border-radius: 4px;
+            font-family: 'Teko', sans-serif;
+            font-size: 1.1rem;
+            font-style: italic;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .admin-trigger:hover {
+            background-color: var(--blood-red);
+            color: #fff;
         }
 
-        .status-badge.synced {
-            border-color: var(--live-green);
-            color: var(--live-green);
-            background-color: rgba(0, 230, 118, 0.1);
-            box-shadow: 0 0 10px rgba(0, 230, 118, 0.2);
+        /* PAINEL ADMINISTRATIVO OCULTO */
+        .admin-panel {
+            display: none;
+            width: 100%; max-width: 600px;
+            background-color: var(--bg-panel);
+            border: 1px solid var(--blood-red);
+            padding: 20px;
+            margin: 20px auto;
+            border-radius: 6px;
+            box-shadow: 0 0 20px rgba(218,0,0,0.3);
         }
-
-        .dot {
-            width: 10px; height: 10px; border-radius: 50%;
-            background-color: currentColor; box-shadow: 0 0 8px currentColor;
+        .admin-panel h3 { font-family: 'Teko', sans-serif; font-size: 1.8rem; color: var(--blood-red); font-style: italic; margin-bottom: 10px; }
+        .admin-panel input, .admin-panel textarea {
+            width: 100%; background: #000; border: 1px solid var(--border-color);
+            color: #fff; padding: 10px; margin-bottom: 10px; border-radius: 4px; font-family: 'Inter', sans-serif;
         }
+        .admin-panel textarea { resize: vertical; height: 80px; }
+        .admin-btn {
+            background-color: var(--blood-red); color: #fff; border: none;
+            padding: 8px 16px; font-family: 'Teko', sans-serif; font-size: 1.2rem;
+            font-style: italic; cursor: pointer; border-radius: 4px; margin-right: 10px;
+        }
+        .admin-btn:hover { background-color: #ff1a1a; }
 
         /* NAVEGAÇÃO / ABAS */
         .nav-container {
-            width: 100%; max-width: 1200px; margin: 30px auto 20px auto;
+            width: 100%; max-width: 1200px; margin: 20px auto;
             display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; padding: 0 20px;
         }
 
@@ -164,7 +180,7 @@
         .col-timer { width: 25%; font-family: 'Teko', sans-serif; font-size: 2rem; text-align: right; font-style: italic; }
         .empty-row { opacity: 0.4; background-color: transparent; border-style: dashed; }
 
-        /* ESTILO DA TABELA ROUBO DE HUNT */
+        /* TABELA ROUBO DE HUNT */
         .combat-table { display: flex; flex-direction: column; gap: 8px; }
         .combat-row {
             display: flex; justify-content: space-between; align-items: center;
@@ -182,19 +198,24 @@
         footer {
             margin-top: auto; padding: 30px 20px; width: 100%;
             background: linear-gradient(0deg, #050505 0%, #0a0a0a 100%);
-            border-top: 1px solid #1a1a1a; display: flex; justify-content: center;
+            border-top: 1px solid #1a1a1a; display: flex; flex-direction: column; align-items: center; gap: 15px;
         }
         .support-banner {
             background-color: var(--bg-panel); border: 1px solid var(--border-color);
             padding: 12px 30px; border-radius: 4px; display: flex; align-items: center;
             gap: 15px; font-size: 0.95rem; color: #999; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            text-transform: uppercase; font-style: italic; font-weight: 800;
+            text-transform: uppercase; font-style: italic; font-weight: 800; flex-wrap: wrap; justify-content: center;
         }
         .coupon-highlight {
             color: #fff; background-color: var(--blood-red); padding: 6px 16px;
             border-radius: 4px; font-weight: 800; letter-spacing: 1.5px;
             font-size: 1.1rem; box-shadow: 0 0 15px rgba(218,0,0,0.4);
         }
+        .creator-link {
+            color: #4AA3DF; text-decoration: none; font-weight: 800;
+            transition: color 0.2s; border-bottom: 1px dashed #4AA3DF;
+        }
+        .creator-link:hover { color: #fff; border-bottom-color: #fff; }
 
         @keyframes pulse-text { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
     </style>
@@ -202,26 +223,46 @@
 <body>
 
     <header>
+        <button class="admin-trigger" onclick="toggleAdminPanel()">Painel ADM</button>
         <div class="logo-container">
             <img src="undefined_-_Imgur.png" alt="Blood Esports">
         </div>
-        <div class="status-badge" id="status-badge">
-            <div class="dot"></div>
-            <span id="status-text">Conectando ao Dashboard...</span>
-        </div>
     </header>
+
+    <!-- PAINEL DE LOGIN E CONFIGURAÇÃO ADMIN -->
+    <div class="admin-panel" id="adminPanel">
+        <h3>Painel Administrativo</h3>
+        <div id="loginSection">
+            <input type="text" id="adminUser" placeholder="Usuário Admin (ex: admin)">
+            <input type="password" id="adminPass" placeholder="Senha">
+            <button class="admin-btn" onclick="doLogin()">Entrar</button>
+        </div>
+        <div id="configSection" style="display:none;">
+            <p style="color: #00e676; margin-bottom: 10px; font-weight: bold;">Logado com sucesso!</p>
+            <label style="font-size: 0.9rem; color: #aaa;">Insira os nicks da guilda separados por vírgula:</label>
+            <textarea id="guildNicks" placeholder="Nick1, Nick2, Nick3..."></textarea>
+            <button class="admin-btn" onclick="saveGuildNicks()">Salvar Nicks</button>
+            <button class="admin-btn" style="background-color: #00b0ff;" onclick="downloadPDF()">Baixar Relatório PDF</button>
+            <button class="admin-btn" style="background-color: #444;" onclick="toggleAdminPanel()">Fechar</button>
+        </div>
+    </div>
 
     <div class="nav-container" id="nav-container"></div>
     <main id="main-content"></main>
 
     <footer>
         <div class="support-banner">
-            <span>Apoie a guilda usando o cupom:</span>
+            <span>Apoie a guilda com o cupom:</span>
             <span class="coupon-highlight">xRasGhulx40</span>
+            <span style="color: #444;">|</span>
+            <span>Interessou no site? <a class="creator-link" href="https://discord.com/users/patrulhadadiversao" target="_blank">Clique aqui para falar com o criador</a></span>
         </div>
     </footer>
 
     <script>
+        // Substitua pela URL da sua implantação do Google Apps Script
+        const SPREADSHEET_API = "SUA_URL_DO_APPS_SCRIPT_AQUI";
+
         const respawnRules = {
             "Selupan": 34.16667,
             "Nightmare": 40.16667,
@@ -236,6 +277,57 @@
         let allData = [];
         let combatData = [];
         let currentTab = 'Visão Geral';
+
+        function toggleAdminPanel() {
+            const panel = document.getElementById('adminPanel');
+            panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+        }
+
+        async function doLogin() {
+            const user = document.getElementById('adminUser').value;
+            const pass = document.getElementById('adminPass').value;
+            try {
+                const res = await fetch(`${SPREADSHEET_API}?action=login&user=${user}&pass=${pass}`);
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById('loginSection').style.display = 'none';
+                    document.getElementById('configSection').style.display = 'block';
+                } else {
+                    alert("Usuário ou senha incorretos!");
+                }
+            } catch(e) {
+                alert("Erro ao conectar com a planilha.");
+            }
+        }
+
+        async function saveGuildNicks() {
+            const nicks = document.getElementById('guildNicks').value;
+            try {
+                const res = await fetch(`${SPREADSHEET_API}?action=updateMembers&nicks=${encodeURIComponent(nicks)}`);
+                const data = await res.json();
+                if (data.success) {
+                    alert("Nicks salvos com sucesso na planilha!");
+                    fetchBossLogs();
+                }
+            } catch(e) {
+                alert("Erro ao salvar nicks.");
+            }
+        }
+
+        async function downloadPDF() {
+            try {
+                const res = await fetch(`${SPREADSHEET_API}?action=downloadPDF`);
+                const data = await res.json();
+                if (data.pdfBase64) {
+                    const link = document.createElement('a');
+                    link.href = 'data:application/pdf;base64,' + data.pdfBase64;
+                    link.download = 'Relatorio_Roubo_Hunt.pdf';
+                    link.click();
+                }
+            } catch(e) {
+                alert("Erro ao gerar PDF.");
+            }
+        }
 
         function parseBrazilianDate(dateString) {
             const match = dateString.match(/(\d{2})\/(\d{2})\/(\d{4})[^\d]+(\d{2}):(\d{2}):(\d{2})/);
@@ -256,13 +348,14 @@
         }
 
         async function fetchBossLogs() {
-            const badge = document.getElementById('status-badge');
-            const statusText = document.getElementById('status-text');
-            
             try {
-                badge.className = 'status-badge';
-                statusText.innerText = "Sincronizando Módulos...";
-                
+                // Puxa dados da planilha e do dashboard em paralelo
+                if (SPREADSHEET_API !== "SUA_URL_DO_APPS_SCRIPT_AQUI") {
+                    const sheetRes = await fetch(`${SPREADSHEET_API}?action=getPublicData`);
+                    const sheetJson = await sheetRes.json();
+                    if (sheetJson.ranking) { combatData = sheetJson.ranking; }
+                }
+
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 8000);
                 const response = await fetch('/api/bosses', { signal: controller.signal });
@@ -278,8 +371,6 @@
                 if (rows.length === 0) throw new Error("Tabela não encontrada");
 
                 const latestKills = {};
-                const combatMap = {};
-
                 rows.forEach(row => {
                     const columns = row.querySelectorAll('td');
                     if (columns.length >= 5) {
@@ -301,29 +392,14 @@
                                 };
                             }
                         }
-
-                        if (killedBy) {
-                            if (!combatMap[killedBy]) { combatMap[killedBy] = { player: killedBy, blue: 0, red: 0 }; }
-                            combatMap[killedBy].blue += 0.5;
-                        }
                     }
                 });
 
                 allData = Object.values(latestKills).sort((a, b) => a.spawnDate - b.spawnDate);
-                
-                combatData = Object.values(combatMap).map(c => ({
-                    player: c.player,
-                    blue: (c.blue).toFixed(1) + 'k',
-                    red: (c.blue * 0.4).toFixed(1) + 'k'
-                })).sort((a, b) => parseFloat(b.blue) - parseFloat(a.blue)).slice(0, 15);
-
-                badge.className = 'status-badge synced'; 
-                statusText.innerText = "Radar Preditivo Online";
                 renderUI();
 
             } catch (error) {
-                badge.className = 'status-badge'; 
-                statusText.innerText = "Buscando Padrões...";
+                // Tratamento silencioso em background
             }
         }
 
@@ -381,7 +457,7 @@
                 main.innerHTML = headerHtml + `<div class="overview-grid">${cardsHtml}</div>`;
             } 
             else if (currentTab === 'Roubo de Hunt') {
-                const rowsHtml = combatData.map((c, index) => `
+                const rowsHtml = combatData.length > 0 ? combatData.map((c, index) => `
                     <div class="combat-row">
                         <div class="combat-rank">${index + 1}º</div>
                         <div class="combat-player">${c.player}</div>
@@ -390,7 +466,7 @@
                             <span class="stat-red">${c.red}</span>
                         </div>
                     </div>
-                `).join('');
+                `).join('') : '<p style="color:#777; text-align:center; padding: 20px;">Nenhum membro da guilda cadastrado ou sincronizado no painel ADM.</p>';
                 main.innerHTML = headerHtml + `<div class="combat-table">${rowsHtml}</div>`;
             }
             else {
