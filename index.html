@@ -77,18 +77,34 @@
             color: #fff;
         }
 
-        /* PAINEL ADMINISTRATIVO OCULTO */
+        /* PAINEL ADMINISTRATIVO COM BOTÃO DE FECHAR (X) */
         .admin-panel {
             display: none;
             width: 100%; max-width: 600px;
             background-color: var(--bg-panel);
             border: 1px solid var(--blood-red);
-            padding: 20px;
+            padding: 25px 20px 20px 20px;
             margin: 20px auto;
             border-radius: 6px;
+            position: relative;
             box-shadow: 0 0 20px rgba(218,0,0,0.3);
         }
-        .admin-panel h3 { font-family: 'Teko', sans-serif; font-size: 1.8rem; color: var(--blood-red); font-style: italic; margin-bottom: 10px; }
+        
+        .close-admin {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.5rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .close-admin:hover { color: var(--blood-red); }
+
+        .admin-panel h3 { font-family: 'Teko', sans-serif; font-size: 1.8rem; color: var(--blood-red); font-style: italic; margin-bottom: 15px; }
         .admin-panel input, .admin-panel textarea {
             width: 100%; background: #000; border: 1px solid var(--border-color);
             color: #fff; padding: 10px; margin-bottom: 10px; border-radius: 4px; font-family: 'Inter', sans-serif;
@@ -229,8 +245,9 @@
         </div>
     </header>
 
-    <!-- PAINEL DE LOGIN E CONFIGURAÇÃO ADMIN -->
+    <!-- PAINEL DE LOGIN E CONFIGURAÇÃO ADMIN COM BOTÃO (X) -->
     <div class="admin-panel" id="adminPanel">
+        <button class="close-admin" onclick="toggleAdminPanel()">×</button>
         <h3>Painel Administrativo</h3>
         <div id="loginSection">
             <input type="text" id="adminUser" placeholder="Usuário Admin (ex: admin)">
@@ -243,7 +260,6 @@
             <textarea id="guildNicks" placeholder="Nick1, Nick2, Nick3..."></textarea>
             <button class="admin-btn" onclick="saveGuildNicks()">Salvar Nicks</button>
             <button class="admin-btn" style="background-color: #00b0ff;" onclick="downloadPDF()">Baixar Relatório PDF</button>
-            <button class="admin-btn" style="background-color: #444;" onclick="toggleAdminPanel()">Fechar</button>
         </div>
     </div>
 
@@ -260,8 +276,7 @@
     </footer>
 
     <script>
-        // Substitua pela URL da sua implantação do Google Apps Script
-        const SPREADSHEET_API = "https://script.google.com/macros/s/AKfycbyaOqECwGu7Ele_BsTvDGZsLzL8cK9LO-Zo4jNNK_4en_1Pa3wNOB7IoqDM48zCABJxhg/exec";
+        const SPREADSHEET_API = ""; // Vazio por enquanto para não travar os bosses
 
         const respawnRules = {
             "Selupan": 34.16667,
@@ -286,6 +301,16 @@
         async function doLogin() {
             const user = document.getElementById('adminUser').value;
             const pass = document.getElementById('adminPass').value;
+            if(!SPREADSHEET_API) {
+                // Login de segurança padrão caso a planilha ainda não esteja vinculada
+                if(user === "admin" && pass === "123456") {
+                    document.getElementById('loginSection').style.display = 'none';
+                    document.getElementById('configSection').style.display = 'block';
+                } else {
+                    alert("Usuário ou senha incorretos!");
+                }
+                return;
+            }
             try {
                 const res = await fetch(`${SPREADSHEET_API}?action=login&user=${user}&pass=${pass}`);
                 const data = await res.json();
@@ -301,6 +326,7 @@
         }
 
         async function saveGuildNicks() {
+            if(!SPREADSHEET_API) { alert("Configure a URL do Apps Script primeiro!"); return; }
             const nicks = document.getElementById('guildNicks').value;
             try {
                 const res = await fetch(`${SPREADSHEET_API}?action=updateMembers&nicks=${encodeURIComponent(nicks)}`);
@@ -315,6 +341,7 @@
         }
 
         async function downloadPDF() {
+            if(!SPREADSHEET_API) { alert("Configure a URL do Apps Script primeiro!"); return; }
             try {
                 const res = await fetch(`${SPREADSHEET_API}?action=downloadPDF`);
                 const data = await res.json();
@@ -349,8 +376,7 @@
 
         async function fetchBossLogs() {
             try {
-                // Puxa dados da planilha e do dashboard em paralelo
-                if (SPREADSHEET_API !== "SUA_URL_DO_APPS_SCRIPT_AQUI") {
+                if (SPREADSHEET_API) {
                     const sheetRes = await fetch(`${SPREADSHEET_API}?action=getPublicData`);
                     const sheetJson = await sheetRes.json();
                     if (sheetJson.ranking) { combatData = sheetJson.ranking; }
@@ -399,7 +425,7 @@
                 renderUI();
 
             } catch (error) {
-                // Tratamento silencioso em background
+                // Silencioso em background
             }
         }
 
