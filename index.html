@@ -32,7 +32,6 @@
             min-height: 100vh;
         }
 
-        /* HEADER & BRANDING */
         header {
             width: 100%;
             background: radial-gradient(circle at top center, #1a0000 0%, var(--bg-dark) 80%);
@@ -56,7 +55,6 @@
             .logo-container img { height: 90px; }
         }
 
-        /* BOTÃO DE LOGIN ADM NO TOPO */
         .admin-trigger {
             position: absolute;
             top: 20px;
@@ -77,22 +75,32 @@
             color: #fff;
         }
 
-        /* PAINEL ADMINISTRATIVO COM BOTÃO DE FECHAR (X) */
+        /* PAINEL ADMINISTRATIVO COM ANIMAÇÃO SUAVE */
         .admin-panel {
             display: none;
-            width: 100%; max-width: 600px;
+            opacity: 0;
+            transform: translateY(-15px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            width: 100%; max-width: 500px;
             background-color: var(--bg-panel);
             border: 1px solid var(--blood-red);
-            padding: 25px 20px 20px 20px;
+            padding: 30px 25px;
             margin: 20px auto;
             border-radius: 6px;
             position: relative;
-            box-shadow: 0 0 20px rgba(218,0,0,0.3);
+            box-shadow: 0 0 25px rgba(218,0,0,0.4);
+            text-align: center;
+        }
+        
+        .admin-panel.show {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
         }
         
         .close-admin {
             position: absolute;
-            top: 10px;
+            top: 12px;
             right: 15px;
             background: transparent;
             border: none;
@@ -104,18 +112,45 @@
         }
         .close-admin:hover { color: var(--blood-red); }
 
-        .admin-panel h3 { font-family: 'Teko', sans-serif; font-size: 1.8rem; color: var(--blood-red); font-style: italic; margin-bottom: 15px; }
-        .admin-panel input, .admin-panel textarea {
-            width: 100%; background: #000; border: 1px solid var(--border-color);
-            color: #fff; padding: 10px; margin-bottom: 10px; border-radius: 4px; font-family: 'Inter', sans-serif;
+        .admin-panel h3 { 
+            font-family: 'Teko', sans-serif; 
+            font-size: 2.2rem; 
+            color: var(--blood-red); 
+            font-style: italic; 
+            margin-bottom: 20px; 
+            text-align: center; 
         }
-        .admin-panel textarea { resize: vertical; height: 80px; }
+
+        .admin-panel input {
+            width: 100%; background: #000; border: 1px solid var(--border-color);
+            color: #fff; padding: 12px; margin-bottom: 15px; border-radius: 4px; 
+            font-family: 'Inter', sans-serif; text-align: center;
+        }
+
         .admin-btn {
             background-color: var(--blood-red); color: #fff; border: none;
-            padding: 8px 16px; font-family: 'Teko', sans-serif; font-size: 1.2rem;
-            font-style: italic; cursor: pointer; border-radius: 4px; margin-right: 10px;
+            padding: 10px 25px; font-family: 'Teko', sans-serif; font-size: 1.3rem;
+            font-style: italic; cursor: pointer; border-radius: 4px; display: inline-block;
+            margin-top: 5px; transition: background 0.2s;
         }
         .admin-btn:hover { background-color: #ff1a1a; }
+
+        .tags-container {
+            display: flex; flex-wrap: wrap; gap: 8px; background: #000;
+            border: 1px solid var(--border-color); padding: 10px; border-radius: 4px;
+            min-height: 80px; max-height: 150px; overflow-y: auto; margin-bottom: 15px;
+            text-align: left;
+        }
+        .tag {
+            background-color: var(--blood-dark); color: #fff; padding: 5px 10px;
+            border-radius: 4px; display: flex; align-items: center; gap: 8px;
+            font-size: 0.9rem; font-weight: 600;
+        }
+        .tag-remove { cursor: pointer; color: #ff9999; font-weight: bold; }
+        .tag-remove:hover { color: #fff; }
+
+        .tag-input-wrapper { display: flex; gap: 10px; margin-bottom: 15px; }
+        .tag-input-wrapper input { margin-bottom: 0; text-align: left; }
 
         /* NAVEGAÇÃO / ABAS */
         .nav-container {
@@ -137,7 +172,6 @@
             border-color: var(--blood-red); box-shadow: 0 4px 15px rgba(218, 0, 0, 0.4);
         }
 
-        /* CONTEÚDO PRINCIPAL */
         main { width: 100%; max-width: 1200px; padding: 0 20px 40px 20px; flex: 1; }
 
         .section-title {
@@ -149,7 +183,6 @@
 
         .last-update { font-family: 'Inter', sans-serif; font-size: 0.85rem; color: var(--text-muted); font-weight: 400; font-style: normal; }
 
-        /* GRID COMPACTA */
         .overview-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; }
 
         .compact-card {
@@ -177,7 +210,6 @@
         .date-sub { font-size: 0.85rem; color: var(--text-muted); }
         .date-sub.prediction { color: #4AA3DF; font-weight: 600; }
 
-        /* LISTA DETALHADA DE BOSSES */
         .server-list { display: flex; flex-direction: column; gap: 10px; }
         .server-row {
             display: flex; justify-content: space-between; align-items: center;
@@ -196,7 +228,6 @@
         .col-timer { width: 25%; font-family: 'Teko', sans-serif; font-size: 2rem; text-align: right; font-style: italic; }
         .empty-row { opacity: 0.4; background-color: transparent; border-style: dashed; }
 
-        /* TABELA ROUBO DE HUNT */
         .combat-table { display: flex; flex-direction: column; gap: 8px; }
         .combat-row {
             display: flex; justify-content: space-between; align-items: center;
@@ -210,7 +241,6 @@
         .stat-blue { color: var(--combat-blue); }
         .stat-red { color: var(--blood-red); }
 
-        /* FOOTER */
         footer {
             margin-top: auto; padding: 30px 20px; width: 100%;
             background: linear-gradient(0deg, #050505 0%, #0a0a0a 100%);
@@ -245,21 +275,40 @@
         </div>
     </header>
 
-    <!-- PAINEL DE LOGIN E CONFIGURAÇÃO ADMIN COM BOTÃO (X) -->
+    <!-- PAINEL ADMINISTRATIVO COM ANIMAÇÃO E BOTÃO SAIR -->
     <div class="admin-panel" id="adminPanel">
         <button class="close-admin" onclick="toggleAdminPanel()">×</button>
         <h3>Painel Administrativo</h3>
+        
         <div id="loginSection">
-            <input type="text" id="adminUser" placeholder="Usuário Admin (ex: admin)">
+            <input type="text" id="adminUser" placeholder="Usuário">
             <input type="password" id="adminPass" placeholder="Senha">
+            <br>
             <button class="admin-btn" onclick="doLogin()">Entrar</button>
         </div>
-        <div id="configSection" style="display:none;">
-            <p style="color: #00e676; margin-bottom: 10px; font-weight: bold;">Logado com sucesso!</p>
-            <label style="font-size: 0.9rem; color: #aaa;">Insira os nicks da guilda separados por vírgula:</label>
-            <textarea id="guildNicks" placeholder="Nick1, Nick2, Nick3..."></textarea>
-            <button class="admin-btn" onclick="saveGuildNicks()">Salvar Nicks</button>
-            <button class="admin-btn" style="background-color: #00b0ff;" onclick="downloadPDF()">Baixar Relatório PDF</button>
+
+        <div id="configSection" style="display:none; text-align: left;">
+            <p style="color: #00e676; margin-bottom: 10px; font-weight: bold; text-align: center;">Sessão Ativa (Admin)</p>
+            
+            <label style="font-size: 0.85rem; color: #aaa; display: block; margin-bottom: 5px;">Adicionar Nick da Guilda:</label>
+            <div class="tag-input-wrapper">
+                <input type="text" id="newNickInput" placeholder="Digite o nick e aperte Enter..." onkeypress="handleNickKey(event)">
+                <button class="admin-btn" style="margin-top:0;" onclick="addNickTag()">Adicionar</button>
+            </div>
+
+            <label style="font-size: 0.85rem; color: #aaa; display: block; margin-bottom: 5px;">Membros Cadastrados (Clique no × para remover):</label>
+            <div class="tags-container" id="tagsContainer"></div>
+
+            <div style="margin-top: 15px; display: flex; flex-direction: column; gap: 10px;">
+                <button class="admin-btn" style="width:100%; background-color: #00e676; color:#000;" onclick="saveGuildNicks()">Salvar Alterações</button>
+                
+                <div style="display: flex; gap: 10px; align-items: center; margin-top: 5px;">
+                    <input type="date" id="reportDate" style="margin-bottom:0; flex: 1;">
+                    <button class="admin-btn" style="width: auto; background-color: #00b0ff; margin-top:0;" onclick="downloadPDF()">Baixar PDF</button>
+                </div>
+
+                <button class="admin-btn" style="background-color: #555; margin-top: 10px;" onclick="doLogout()">Sair da Conta (Logout)</button>
+            </div>
         </div>
     </div>
 
@@ -276,7 +325,8 @@
     </footer>
 
     <script>
-        const SPREADSHEET_API = ""; // Vazio por enquanto para não travar os bosses
+        const SPREADSHEET_API = "https://script.google.com/macros/s/AKfycbwSjjSDkB846CR8m6hz_U95Anl00QOeml8GxBzYtow7MZKaBj60aIU9XRU2XvBnTlw8vA/exec"; 
+        let guildMembersList = [];
 
         const respawnRules = {
             "Selupan": 34.16667,
@@ -293,30 +343,50 @@
         let combatData = [];
         let currentTab = 'Visão Geral';
 
+        // Verifica sessão salva ao carregar a página
+        window.addEventListener('DOMContentLoaded', () => {
+            if (localStorage.getItem('blood_admin_logged') === 'true') {
+                document.getElementById('loginSection').style.display = 'none';
+                document.getElementById('configSection').style.display = 'block';
+                fetchMembersForAdmin();
+            }
+        });
+
         function toggleAdminPanel() {
             const panel = document.getElementById('adminPanel');
-            panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+            if (panel.classList.contains('show')) {
+                panel.classList.remove('show');
+                setTimeout(() => panel.style.display = 'none', 300); // Aguarda o fim da animação
+            } else {
+                panel.style.display = 'block';
+                setTimeout(() => panel.classList.add('show'), 10);
+            }
         }
 
         async function doLogin() {
             const user = document.getElementById('adminUser').value;
             const pass = document.getElementById('adminPass').value;
-            if(!SPREADSHEET_API) {
-                // Login de segurança padrão caso a planilha ainda não esteja vinculada
+            
+            if(!SPREADSHEET_API || SPREADSHEET_API === "SUA_URL_DO_APPS_SCRIPT_AQUI") {
                 if(user === "admin" && pass === "123456") {
+                    localStorage.setItem('blood_admin_logged', 'true');
                     document.getElementById('loginSection').style.display = 'none';
                     document.getElementById('configSection').style.display = 'block';
+                    renderTags();
                 } else {
                     alert("Usuário ou senha incorretos!");
                 }
                 return;
             }
+
             try {
                 const res = await fetch(`${SPREADSHEET_API}?action=login&user=${user}&pass=${pass}`);
                 const data = await res.json();
                 if (data.success) {
+                    localStorage.setItem('blood_admin_logged', 'true');
                     document.getElementById('loginSection').style.display = 'none';
                     document.getElementById('configSection').style.display = 'block';
+                    fetchMembersForAdmin();
                 } else {
                     alert("Usuário ou senha incorretos!");
                 }
@@ -325,30 +395,89 @@
             }
         }
 
-        async function saveGuildNicks() {
-            if(!SPREADSHEET_API) { alert("Configure a URL do Apps Script primeiro!"); return; }
-            const nicks = document.getElementById('guildNicks').value;
+        function doLogout() {
+            localStorage.removeItem('blood_admin_logged');
+            document.getElementById('configSection').style.display = 'none';
+            document.getElementById('loginSection').style.display = 'block';
+            document.getElementById('adminUser').value = '';
+            document.getElementById('adminPass').value = '';
+            alert("Sessão encerrada com sucesso!");
+        }
+
+        function handleNickKey(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addNickTag();
+            }
+        }
+
+        function addNickTag() {
+            const input = document.getElementById('newNickInput');
+            const val = input.value.trim();
+            if (val && !guildMembersList.includes(val)) {
+                guildMembersList.push(val);
+                input.value = '';
+                renderTags();
+            }
+        }
+
+        function removeNickTag(nick) {
+            guildMembersList = guildMembersList.filter(item => item !== nick);
+            renderTags();
+        }
+
+        function renderTags() {
+            const container = document.getElementById('tagsContainer');
+            container.innerHTML = guildMembersList.map(nick => `
+                <div class="tag">
+                    <span>${nick}</span>
+                    <span class="tag-remove" onclick="removeNickTag('${nick}')">×</span>
+                </div>
+            `).join('') || '<span style="color:#666; font-size:0.9rem;">Nenhum membro adicionado ainda.</span>';
+        }
+
+        async function fetchMembersForAdmin() {
             try {
-                const res = await fetch(`${SPREADSHEET_API}?action=updateMembers&nicks=${encodeURIComponent(nicks)}`);
+                const res = await fetch(`${SPREADSHEET_API}?action=getPublicData`);
+                const data = await res.json();
+                if(data.members) {
+                    guildMembersList = data.members;
+                    renderTags();
+                }
+            } catch(e) {}
+        }
+
+        async function saveGuildNicks() {
+            if(!SPREADSHEET_API || SPREADSHEET_API === "SUA_URL_DO_APPS_SCRIPT_AQUI") {
+                alert("Nicks salvos localmente na sessão.");
+                return;
+            }
+            const nicksStr = guildMembersList.join(',');
+            try {
+                const res = await fetch(`${SPREADSHEET_API}?action=updateMembers&nicks=${encodeURIComponent(nicksStr)}`);
                 const data = await res.json();
                 if (data.success) {
-                    alert("Nicks salvos com sucesso na planilha!");
+                    alert("Membros atualizados com sucesso na planilha!");
                     fetchBossLogs();
                 }
             } catch(e) {
-                alert("Erro ao salvar nicks.");
+                alert("Erro ao salvar membros.");
             }
         }
 
         async function downloadPDF() {
-            if(!SPREADSHEET_API) { alert("Configure a URL do Apps Script primeiro!"); return; }
+            const dateVal = document.getElementById('reportDate').value;
+            if(!SPREADSHEET_API || SPREADSHEET_API === "SUA_URL_DO_APPS_SCRIPT_AQUI") {
+                alert("Configure a URL do Apps Script para gerar o relatório em PDF.");
+                return;
+            }
             try {
-                const res = await fetch(`${SPREADSHEET_API}?action=downloadPDF`);
+                const res = await fetch(`${SPREADSHEET_API}?action=downloadPDF&date=${dateVal}`);
                 const data = await res.json();
                 if (data.pdfBase64) {
                     const link = document.createElement('a');
                     link.href = 'data:application/pdf;base64,' + data.pdfBase64;
-                    link.download = 'Relatorio_Roubo_Hunt.pdf';
+                    link.download = `Relatorio_Hunt_${dateVal || 'Geral'}.pdf`;
                     link.click();
                 }
             } catch(e) {
@@ -376,10 +505,11 @@
 
         async function fetchBossLogs() {
             try {
-                if (SPREADSHEET_API) {
+                if (SPREADSHEET_API && SPREADSHEET_API !== "SUA_URL_DO_APPS_SCRIPT_AQUI") {
                     const sheetRes = await fetch(`${SPREADSHEET_API}?action=getPublicData`);
                     const sheetJson = await sheetRes.json();
                     if (sheetJson.ranking) { combatData = sheetJson.ranking; }
+                    if (sheetJson.members) { guildMembersList = sheetJson.members; }
                 }
 
                 const controller = new AbortController();
@@ -424,9 +554,7 @@
                 allData = Object.values(latestKills).sort((a, b) => a.spawnDate - b.spawnDate);
                 renderUI();
 
-            } catch (error) {
-                // Silencioso em background
-            }
+            } catch (error) {}
         }
 
         function formatTimeState(ms) {
