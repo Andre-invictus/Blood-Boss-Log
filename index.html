@@ -476,7 +476,7 @@
                 const res = await fetch(`${SPREADSHEET_API}?action=getPublicData`);
                 const data = await res.json();
                 if(data.members) {
-                    guildMembersList = data.members.slice(0, MAX_MEMBERS); // Garante que puxa no máximo 30
+                    guildMembersList = data.members.slice(0, MAX_MEMBERS);
                     renderTags();
                 }
             } catch(e) {}
@@ -538,9 +538,10 @@
             return `${day}/${month} • ${h1}:${m1} - ${h2}:${m2}`;
         }
 
-        // MOTOR DE SINCRONIZAÇÃO USANDO PROXY CORS (Para tentar burlar o bloqueio visual do Dashboard)
+        // MOTOR DE SINCRONIZAÇÃO EM TEMPO REAL (Bypass de IP via Client-Side)
         async function fetchDashboardCombat() {
             try {
+                // 1. Puxa a lista de membros aprovados na Planilha
                 if (SPREADSHEET_API && SPREADSHEET_API !== "SUA_URL_DO_APPS_SCRIPT_AQUI") {
                     const sheetRes = await fetch(`${SPREADSHEET_API}?action=getPublicData`);
                     const sheetJson = await sheetRes.json();
@@ -548,48 +549,66 @@
                 }
 
                 if (guildMembersList.length > 0) {
-                    // Utiliza o AllOrigins como ponte de segurança para forçar a leitura do HTML do Mega MU
-                    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent('https://dashboard.megamu.net')}`;
+                    // 2. Aponta direto para o JSON que você interceptou
+                    const apiURL = 'https://dashboard.megamu.net/dashboard-s14/data1.4.php';
+                    
+                    // O parâmetro 't' com o horário atual impede que o proxy entregue dados cacheados/antigos
+                    const cacheBuster = '?t=' + new Date().getTime();
+                    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(apiURL + cacheBuster)}`;
+                    
                     const response = await fetch(proxyUrl);
                     
                     if (response.ok) {
-                        const data = await response.json();
-                        const htmlText = data.contents;
-                        const parser = new DOMParser();
-                        const doc = parser.parseFromString(htmlText, 'text/html');
+                        const proxyData = await response.json();
                         
-                        // Busca as linhas da tabela de combat
-                        const rows = doc.querySelectorAll('table tbody tr');
-                        let liveCombatMap = {};
+                        // Extrai o texto JSON puro entregue pela API do Mega MU
+                        const rawJson = JSON.parse(proxyData.contents); 
+                        
+                        if (rawJson.events && rawJson.events.length > 0) {
+                            const eventData = JSON.parse(rawJson.events[0].data);
+                            const users = eventData.users;
+                            let liveCombatMap = {};
 
-                        rows.forEach(row => {
-                            const cols = row.querySelectorAll('td');
-                            // Garante que é a estrutura da aba Combat com pelo menos 4 colunas
-                            if (cols.length >= 4) {
-                                const player = cols[1] ? cols[1].textContent.replace(/<[^>]*>/g, "").trim() : "";
-                                const blueVal = cols[2] ? cols[2].textContent.replace(/<[^>]*>/g, "").trim() : "0.0k";
-                                const redVal = cols[3] ? cols[3].textContent.replace(/<[^>]*>/g, "").trim() : "0.0k";
+                            // Normaliza todos os nicks do jogo para minúsculo
+                            let usersLower = {};
+                            for (let key in users) {
+                                usersLower[key.toLowerCase()] = users[key];
+                            }
 
-                                if (player && guildMembersList.includes(player)) {
-                                    liveCombatMap[player] = { player: player, blue: blueVal, red: redVal };
+                            // Cruza com a sua lista da Guilda
+                            guildMembersList.forEach(nick => {
+                                const nickLower = nick.toLowerCase();
+                                
+                                if (usersLower[nickLower]) {
+                                    const pontuacao = usersLower[nickLower]; // Ex: [1486, 288]
+                                    
+                                    const blueVal = (pontuacao[0] / 1000).toFixed(1) + "k";
+                                    const redVal = (pontuacao[1] / 1000).toFixed(1) + "k";
+                                    
+                                    liveCombatMap[nick] = {
+                                        player: nick,
+                                        blue: blueVal,
+                                        red: pontuacao[1] > 0 ? "-" + redVal : "0.0k"
+                                    };
                                 }
-                            }
-                        });
+                            });
 
-                        const liveArray = Object.values(liveCombatMap);
-                        if (liveArray.length > 0) {
-                            combatData = liveArray.sort((a, b) => parseFloat(b.blue) - parseFloat(a.blue));
-                            if (SPREADSHEET_API && SPREADSHEET_API !== "SUA_URL_DO_APPS_SCRIPT_AQUI") {
-                                fetch(`${SPREADSHEET_API}?action=syncCombat&data=${encodeURIComponent(JSON.stringify(combatData))}`);
+                            const liveArray = Object.values(liveCombatMap);
+                            
+                            if (liveArray.length > 0) {
+                                // Ordena do maior para o menor roubo de hunt
+                                combatData = liveArray.sort((a, b) => parseFloat(b.blue) - parseFloat(a.blue));
+                            } else {
+                                combatData = [];
                             }
-                        } else {
-                            combatData = [];
                         }
                     }
                 }
             } catch(e) {
-                // Silencioso para não atrapalhar o radar de bosses em caso de falha de conexão do proxy
+                // Mantém o site estável caso haja pico de latência no proxy
+                console.error("Erro na sincronização de Hunt:", e);
             }
+            
             renderUI();
         }
 
