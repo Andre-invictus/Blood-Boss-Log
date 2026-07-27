@@ -4,19 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Blood Esports | Boss Radar</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Teko:wght@500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,600;0,800;1,800&family=Teko:wght@500;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg-dark: #050505;
-            --bg-panel: #111111;
-            --bg-card: #1a1a1a;
+            --bg-panel: #0d0d0d;
+            --bg-card: #141414;
             --blood-red: #da0000;
-            --blood-dark: #8a0000;
-            --text-main: #f0f0f0;
-            --text-muted: #777777;
+            --blood-dark: #660000;
+            --text-main: #f5f5f5;
+            --text-muted: #888888;
             --live-green: #00e676;
-            --unknown-grey: #555555;
-            --border-color: #222;
+            --unknown-grey: #444444;
+            --border-color: #222222;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -31,169 +31,200 @@
             min-height: 100vh;
         }
 
-        /* HEADER & BRANDING */
+        /* HEADER & BRANDING APRIMORADOS */
         header {
             width: 100%;
-            background: linear-gradient(180deg, #110000 0%, var(--bg-dark) 100%);
-            border-bottom: 1px solid var(--blood-dark);
-            padding: 20px 0;
+            /* Simula um fundo mais texturizado/radial parecido com o site oficial */
+            background: radial-gradient(circle at top center, #1a0000 0%, var(--bg-dark) 80%);
+            border-bottom: 2px solid var(--blood-red);
+            padding: 30px 0 20px 0;
             display: flex;
             flex-direction: column;
             align-items: center;
             position: relative;
+            box-shadow: 0 4px 20px rgba(218, 0, 0, 0.15);
         }
 
-        .logo-container img { height: 80px; object-fit: contain; margin-bottom: 10px; }
+        /* Logo Grande e Responsiva */
+        .logo-container img { 
+            height: 160px; /* Bem maior no Desktop */
+            object-fit: contain; 
+            margin-bottom: 20px;
+            filter: drop-shadow(0 0 15px rgba(218, 0, 0, 0.3)); /* Brilho vermelho suave */
+            transition: all 0.3s ease;
+        }
+
+        @media (max-width: 768px) {
+            .logo-container img {
+                height: 90px; /* Tamanho ajustado para não quebrar no celular */
+            }
+        }
 
         .status-badge {
             background-color: rgba(218, 0, 0, 0.1);
             border: 1px solid var(--blood-red);
             color: var(--blood-red);
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 600;
+            padding: 6px 16px;
+            border-radius: 30px;
+            font-size: 0.85rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
             display: flex;
             align-items: center;
             gap: 8px;
+            box-shadow: 0 0 10px rgba(218, 0, 0, 0.2);
         }
 
         .status-badge.synced {
             border-color: var(--live-green);
             color: var(--live-green);
             background-color: rgba(0, 230, 118, 0.1);
+            box-shadow: 0 0 10px rgba(0, 230, 118, 0.2);
         }
 
         .dot {
-            width: 8px; height: 8px; border-radius: 50%;
+            width: 10px; height: 10px; border-radius: 50%;
             background-color: currentColor; box-shadow: 0 0 8px currentColor;
         }
 
-        /* NAVEGAÇÃO / ABAS */
+        /* NAVEGAÇÃO / ABAS - ESTILO ESPORTS */
         .nav-container {
-            width: 100%; max-width: 1200px; margin: 30px auto 15px auto;
-            display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; padding: 0 20px;
+            width: 100%; max-width: 1200px; margin: 30px auto 20px auto;
+            display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; padding: 0 20px;
         }
 
         .nav-btn {
             background-color: var(--bg-panel); color: var(--text-muted);
-            border: 1px solid var(--border-color); padding: 10px 20px;
-            border-radius: 6px; font-family: 'Teko', sans-serif; font-size: 1.3rem;
-            letter-spacing: 1px; cursor: pointer; transition: all 0.2s ease; text-transform: uppercase;
+            border: 1px solid var(--border-color); padding: 12px 24px;
+            border-radius: 4px; font-family: 'Teko', sans-serif; font-size: 1.4rem;
+            letter-spacing: 1.5px; cursor: pointer; transition: all 0.2s ease; 
+            text-transform: uppercase;
+            font-style: italic; /* Inclinado igual ao menu oficial */
         }
 
-        .nav-btn:hover { color: var(--text-main); border-color: #444; }
+        .nav-btn:hover { 
+            color: var(--text-main); 
+            border-color: var(--blood-red); 
+            background-color: #1a0000;
+        }
+
         .nav-btn.active {
             background-color: var(--blood-red); color: #fff;
-            border-color: var(--blood-red); box-shadow: 0 4px 15px rgba(218, 0, 0, 0.3);
+            border-color: var(--blood-red); box-shadow: 0 4px 15px rgba(218, 0, 0, 0.4);
         }
 
         /* CONTEÚDO PRINCIPAL */
-        main { width: 100%; max-width: 1200px; padding: 0 20px; flex: 1; }
+        main { width: 100%; max-width: 1200px; padding: 0 20px 40px 20px; flex: 1; }
 
         .section-title {
-            font-family: 'Teko', sans-serif; font-size: 2rem; color: var(--text-main);
-            margin-bottom: 15px; display: flex; justify-content: space-between;
+            font-family: 'Teko', sans-serif; font-size: 2.2rem; color: var(--text-main);
+            margin-bottom: 20px; display: flex; justify-content: space-between;
             align-items: flex-end; border-bottom: 2px solid var(--border-color); padding-bottom: 10px;
+            font-style: italic;
         }
 
-        .last-update { font-family: 'Inter', sans-serif; font-size: 0.85rem; color: var(--text-muted); font-weight: 400; }
+        .last-update { font-family: 'Inter', sans-serif; font-size: 0.85rem; color: var(--text-muted); font-weight: 400; font-style: normal; }
 
         /* GRID COMPACTA */
         .overview-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; }
 
         .compact-card {
             background-color: var(--bg-card); border: 1px solid var(--border-color);
-            border-radius: 8px; padding: 15px; display: flex; flex-direction: column;
+            border-radius: 6px; padding: 18px; display: flex; flex-direction: column;
             position: relative; overflow: hidden; border-left: 4px solid var(--border-color);
+            transition: transform 0.2s ease;
         }
+        
+        .compact-card:hover { transform: translateY(-2px); border-color: #333; }
 
         .compact-card.live {
             border-left-color: var(--blood-red);
-            background: linear-gradient(90deg, rgba(218,0,0,0.1) 0%, rgba(26,26,26,1) 100%);
+            background: linear-gradient(90deg, rgba(218,0,0,0.15) 0%, rgba(20,20,20,1) 100%);
+            border-color: rgba(218,0,0,0.3);
         }
 
-        .compact-card.unknown {
-            border-left-color: var(--unknown-grey); opacity: 0.7;
-        }
+        .compact-card.unknown { border-left-color: var(--unknown-grey); opacity: 0.7; }
 
-        .compact-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        .boss-name { font-weight: 800; font-size: 1.1rem; color: #fff; }
-        .server-tag { background-color: #333; font-size: 0.75rem; padding: 2px 6px; border-radius: 4px; font-weight: 600; }
+        .compact-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .boss-name { font-weight: 800; font-size: 1.15rem; color: #fff; }
+        .server-tag { background-color: #222; color: #ccc; font-size: 0.75rem; padding: 3px 8px; border-radius: 4px; font-weight: 800; letter-spacing: 1px; }
 
-        .timer-big { font-family: 'Teko', sans-serif; font-size: 2.2rem; line-height: 1; color: var(--text-main); margin-bottom: 5px; }
+        .timer-big { font-family: 'Teko', sans-serif; font-size: 2.4rem; line-height: 1; color: var(--text-main); margin-bottom: 5px; font-style: italic; }
         .timer-big.live-text { color: var(--blood-red); animation: pulse-text 1.5s infinite; }
-        .timer-big.unknown-text { color: var(--unknown-grey); font-size: 1.8rem; }
+        .timer-big.unknown-text { color: var(--unknown-grey); font-size: 2rem; }
 
-        .date-sub { font-size: 0.8rem; color: var(--text-muted); }
+        .date-sub { font-size: 0.85rem; color: var(--text-muted); }
         .date-sub.prediction { color: #4AA3DF; font-weight: 600; }
 
         /* LISTA DETALHADA */
-        .server-list { display: flex; flex-direction: column; gap: 8px; }
+        .server-list { display: flex; flex-direction: column; gap: 10px; }
 
         .server-row {
             display: flex; justify-content: space-between; align-items: center;
             background-color: var(--bg-card); border: 1px solid var(--border-color);
-            padding: 12px 20px; border-radius: 6px; border-left: 4px solid #333;
+            padding: 15px 25px; border-radius: 6px; border-left: 4px solid #333;
+            transition: transform 0.2s ease;
         }
 
-        .server-row.live-row { border-color: var(--blood-red); border-left: 4px solid var(--blood-red); }
+        .server-row:hover { transform: translateX(5px); border-color: #333; }
+        .server-row.live-row { border-color: rgba(218,0,0,0.5); border-left: 4px solid var(--blood-red); background-color: rgba(218,0,0,0.05); }
         .server-row.unknown-row { opacity: 0.7; border-left: 4px solid var(--unknown-grey); }
 
-        .col-server { width: 10%; font-weight: 800; font-size: 1.2rem; color: #fff; }
-        .col-killer { width: 35%; font-size: 0.9rem; color: var(--text-muted); }
+        .col-server { width: 10%; font-weight: 800; font-size: 1.3rem; color: #fff; }
+        .col-killer { width: 35%; font-size: 0.95rem; color: var(--text-muted); }
         .col-killer span { color: var(--text-main); font-weight: 600; }
-        .col-date { width: 30%; font-size: 0.85rem; color: #4AA3DF; text-align: center; font-weight: 600; }
-        .col-timer { width: 25%; font-family: 'Teko', sans-serif; font-size: 1.8rem; text-align: right; }
+        .col-date { width: 30%; font-size: 0.9rem; color: #4AA3DF; text-align: center; font-weight: 600; }
+        .col-timer { width: 25%; font-family: 'Teko', sans-serif; font-size: 2rem; text-align: right; font-style: italic; }
         
         .empty-row { opacity: 0.4; background-color: transparent; border-style: dashed; }
+        .empty-row:hover { transform: none; border-color: var(--border-color); }
 
-        /* FOOTER PROFISSIONAL */
+        /* FOOTER PROFISSIONAL LIMPO */
         footer {
-            margin-top: 50px;
+            margin-top: auto;
             padding: 30px 20px;
             width: 100%;
-            background: linear-gradient(0deg, #0a0a0a 0%, var(--bg-dark) 100%);
-            border-top: 1px solid var(--border-color);
+            background: linear-gradient(0deg, #050505 0%, #0a0a0a 100%);
+            border-top: 1px solid #1a1a1a;
             display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 15px;
+            justify-content: center;
         }
 
         .support-banner {
             background-color: var(--bg-panel);
             border: 1px solid var(--border-color);
-            padding: 10px 25px;
-            border-radius: 30px;
+            padding: 12px 30px;
+            border-radius: 4px; /* Mais quadrado, menos arredondado */
             display: flex;
             align-items: center;
-            gap: 12px;
-            font-size: 0.9rem;
-            color: var(--text-muted);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            gap: 15px;
+            font-size: 0.95rem;
+            color: #999;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            text-transform: uppercase;
+            font-style: italic;
+            font-weight: 800;
         }
 
         .coupon-highlight {
             color: #fff;
             background-color: var(--blood-red);
-            padding: 4px 14px;
-            border-radius: 20px;
+            padding: 6px 16px;
+            border-radius: 4px;
             font-weight: 800;
-            letter-spacing: 1px;
-            font-size: 1.05rem;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-size: 1.1rem;
+            box-shadow: 0 0 15px rgba(218,0,0,0.4);
         }
 
-        @keyframes pulse-text { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
+        @keyframes pulse-text { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
     </style>
 </head>
 <body>
 
     <header>
         <div class="logo-container">
-            <!-- AQUI ESTÁ A CORREÇÃO: .png em vez de .jpg -->
             <img src="undefined_-_Imgur.png" alt="Blood Esports">
         </div>
         <div class="status-badge" id="status-badge">
@@ -207,13 +238,12 @@
 
     <footer>
         <div class="support-banner">
-            <span>Fortaleça a guilda usando o cupom:</span>
+            <span>Apoie a guilda usando o cupom:</span>
             <span class="coupon-highlight">xRasGhulx40</span>
         </div>
     </footer>
 
     <script>
-        // MATEMÁTICA EXATA
         const respawnRules = {
             "Selupan": 34.16667,
             "Nightmare": 40.16667,
