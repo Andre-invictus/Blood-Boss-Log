@@ -149,8 +149,12 @@
         .tag-remove { cursor: pointer; color: #ff9999; font-weight: bold; }
         .tag-remove:hover { color: #fff; }
 
-        .tag-input-wrapper { display: flex; gap: 10px; margin-bottom: 15px; }
+        .tag-input-wrapper { display: flex; gap: 10px; margin-bottom: 5px; }
         .tag-input-wrapper input { margin-bottom: 0; text-align: left; }
+        
+        .member-counter {
+            text-align: right; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 15px; display: block;
+        }
 
         .nav-container {
             width: 100%; max-width: 1200px; margin: 20px auto;
@@ -231,14 +235,18 @@
         .combat-row {
             display: flex; justify-content: space-between; align-items: center;
             background-color: var(--bg-card); border: 1px solid var(--border-color);
-            padding: 15px 25px; border-radius: 6px;
+            padding: 15px 25px; border-radius: 6px; border-left: 4px solid #333;
         }
         .combat-row:hover { border-color: #333; background-color: #181818; }
         .combat-rank { width: 10%; font-family: 'Teko', sans-serif; font-size: 1.8rem; color: var(--blood-red); font-style: italic; }
-        .combat-player { width: 40%; font-weight: 800; font-size: 1.1rem; color: #fff; }
-        .combat-stats { width: 50%; display: flex; justify-content: flex-end; gap: 30px; font-family: 'Teko', sans-serif; font-size: 1.8rem; font-style: italic; }
+        .combat-player { width: 35%; font-weight: 800; font-size: 1.1rem; color: #fff; }
+        .combat-stats { width: 55%; display: flex; justify-content: flex-end; gap: 30px; font-family: 'Teko', sans-serif; font-size: 1.8rem; font-style: italic; }
         .stat-blue { color: var(--combat-blue); }
         .stat-red { color: var(--blood-red); }
+        
+        .status-offline {
+            font-size: 0.95rem; font-family: 'Inter', sans-serif; font-style: normal; font-weight: 600; color: #e57373; text-align: right; width: 100%;
+        }
 
         footer {
             margin-top: auto; padding: 30px 20px; width: 100%;
@@ -290,11 +298,12 @@
             
             <label style="font-size: 0.85rem; color: #aaa; display: block; margin-bottom: 5px;">Adicionar Nicks (Cole separados por vírgula ou um por um):</label>
             <div class="tag-input-wrapper">
-                <input type="text" id="newNickInput" placeholder="Ex: Nick1, Nick2, Nick3..." onkeypress="handleNickKey(event)">
+                <input type="text" id="newNickInput" placeholder="Ex: Nick1, Nick2..." onkeypress="handleNickKey(event)">
                 <button class="admin-btn" style="margin-top:0;" onclick="addNickTag()">Adicionar</button>
             </div>
+            <span class="member-counter" id="memberCounter">0 / 30 Membros Monitorados</span>
 
-            <label style="font-size: 0.85rem; color: #aaa; display: block; margin-bottom: 5px;">Membros Monitorados:</label>
+            <label style="font-size: 0.85rem; color: #aaa; display: block; margin-bottom: 5px;">Membros na Lista:</label>
             <div class="tags-container" id="tagsContainer"></div>
 
             <div style="margin-top: 15px; display: flex; flex-direction: column; gap: 10px;">
@@ -333,6 +342,7 @@
 
         const SPREADSHEET_API = "https://script.google.com/macros/s/AKfycbwG-BCdyOymZMFmJwz1BRPvuJ923XZsEMRWkn9tGaQMEnONGSuxQgvH_LL0w1BV5ooodA/exec"; 
         let guildMembersList = [];
+        const MAX_MEMBERS = 30;
 
         const respawnRules = {
             "Selupan": 34.16667,
@@ -421,14 +431,24 @@
             const val = input.value.trim();
             if (val) {
                 const parts = val.split(',');
+                let addedAny = false;
+                
                 parts.forEach(part => {
                     const cleanNick = part.trim();
                     if (cleanNick && !guildMembersList.includes(cleanNick)) {
+                        if (guildMembersList.length >= MAX_MEMBERS) {
+                            alert(`O limite máximo do painel é de ${MAX_MEMBERS} membros.`);
+                            return;
+                        }
                         guildMembersList.push(cleanNick);
+                        addedAny = true;
                     }
                 });
-                input.value = '';
-                renderTags();
+                
+                if(addedAny) {
+                    input.value = '';
+                    renderTags();
+                }
             }
         }
 
@@ -439,6 +459,10 @@
 
         function renderTags() {
             const container = document.getElementById('tagsContainer');
+            const counter = document.getElementById('memberCounter');
+            
+            counter.innerText = `${guildMembersList.length} / ${MAX_MEMBERS} Membros Monitorados`;
+            
             container.innerHTML = guildMembersList.map(nick => `
                 <div class="tag">
                     <span>${nick}</span>
@@ -452,7 +476,7 @@
                 const res = await fetch(`${SPREADSHEET_API}?action=getPublicData`);
                 const data = await res.json();
                 if(data.members) {
-                    guildMembersList = data.members;
+                    guildMembersList = data.members.slice(0, MAX_MEMBERS); // Garante que puxa no máximo 30
                     renderTags();
                 }
             } catch(e) {}
@@ -514,16 +538,58 @@
             return `${day}/${month} • ${h1}:${m1} - ${h2}:${m2}`;
         }
 
-        // BUSCA COMBAT VIA PLANILHA A CADA 5 SEGUNDOS
+        // MOTOR DE SINCRONIZAÇÃO USANDO PROXY CORS (Para tentar burlar o bloqueio visual do Dashboard)
         async function fetchDashboardCombat() {
             try {
                 if (SPREADSHEET_API && SPREADSHEET_API !== "SUA_URL_DO_APPS_SCRIPT_AQUI") {
                     const sheetRes = await fetch(`${SPREADSHEET_API}?action=getPublicData`);
                     const sheetJson = await sheetRes.json();
-                    if (sheetJson.members) { guildMembersList = sheetJson.members; }
-                    if (sheetJson.ranking) { combatData = sheetJson.ranking; }
+                    if (sheetJson.members) { guildMembersList = sheetJson.members.slice(0, MAX_MEMBERS); }
                 }
-            } catch(e) {}
+
+                if (guildMembersList.length > 0) {
+                    // Utiliza o AllOrigins como ponte de segurança para forçar a leitura do HTML do Mega MU
+                    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent('https://dashboard.megamu.net')}`;
+                    const response = await fetch(proxyUrl);
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        const htmlText = data.contents;
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(htmlText, 'text/html');
+                        
+                        // Busca as linhas da tabela de combat
+                        const rows = doc.querySelectorAll('table tbody tr');
+                        let liveCombatMap = {};
+
+                        rows.forEach(row => {
+                            const cols = row.querySelectorAll('td');
+                            // Garante que é a estrutura da aba Combat com pelo menos 4 colunas
+                            if (cols.length >= 4) {
+                                const player = cols[1] ? cols[1].textContent.replace(/<[^>]*>/g, "").trim() : "";
+                                const blueVal = cols[2] ? cols[2].textContent.replace(/<[^>]*>/g, "").trim() : "0.0k";
+                                const redVal = cols[3] ? cols[3].textContent.replace(/<[^>]*>/g, "").trim() : "0.0k";
+
+                                if (player && guildMembersList.includes(player)) {
+                                    liveCombatMap[player] = { player: player, blue: blueVal, red: redVal };
+                                }
+                            }
+                        });
+
+                        const liveArray = Object.values(liveCombatMap);
+                        if (liveArray.length > 0) {
+                            combatData = liveArray.sort((a, b) => parseFloat(b.blue) - parseFloat(a.blue));
+                            if (SPREADSHEET_API && SPREADSHEET_API !== "SUA_URL_DO_APPS_SCRIPT_AQUI") {
+                                fetch(`${SPREADSHEET_API}?action=syncCombat&data=${encodeURIComponent(JSON.stringify(combatData))}`);
+                            }
+                        } else {
+                            combatData = [];
+                        }
+                    }
+                }
+            } catch(e) {
+                // Silencioso para não atrapalhar o radar de bosses em caso de falha de conexão do proxy
+            }
             renderUI();
         }
 
@@ -627,17 +693,49 @@
                 main.innerHTML = headerHtml + `<div class="overview-grid">${cardsHtml}</div>`;
             } 
             else if (currentTab === 'Roubo de Hunt') {
-                const rowsHtml = combatData.length > 0 ? combatData.map((c, index) => `
-                    <div class="combat-row">
-                        <div class="combat-rank">${index + 1}º</div>
-                        <div class="combat-player">${c.player}</div>
-                        <div class="combat-stats">
-                            <span class="stat-blue">${c.blue}</span>
-                            <span class="stat-red">${c.red}</span>
-                        </div>
-                    </div>
-                `).join('') : '<p style="color:#777; text-align:center; padding: 20px;">Nenhum membro da guilda cadastrado ou os dados estão sincronizando...</p>';
-                main.innerHTML = headerHtml + `<div class="combat-table">${rowsHtml}</div>`;
+                if (guildMembersList.length === 0) {
+                    main.innerHTML = headerHtml + '<p style="color:#777; text-align:center; padding: 20px;">Nenhum membro da guilda cadastrado. Limite máximo: 30 membros.</p>';
+                    return;
+                }
+
+                let onlineHtml = '';
+                let offlineHtml = '';
+                let rankCounter = 1;
+                const processedNicks = new Set();
+
+                // Monta primeiro a lista de quem está online/registrado no ranking
+                combatData.forEach(c => {
+                    if (guildMembersList.includes(c.player)) {
+                        processedNicks.add(c.player);
+                        onlineHtml += `
+                            <div class="combat-row">
+                                <div class="combat-rank">${rankCounter++}º</div>
+                                <div class="combat-player">${c.player}</div>
+                                <div class="combat-stats">
+                                    <span class="stat-blue">${c.blue}</span>
+                                    <span class="stat-red">${c.red}</span>
+                                </div>
+                            </div>
+                        `;
+                    }
+                });
+
+                // Verifica na sua lista mestra quem não foi localizado online no Dashboard e aplica a mensagem
+                guildMembersList.forEach(nick => {
+                    if (!processedNicks.has(nick)) {
+                        offlineHtml += `
+                            <div class="combat-row" style="opacity: 0.6; border-left-color: var(--unknown-grey);">
+                                <div class="combat-rank" style="color: var(--unknown-grey);">-</div>
+                                <div class="combat-player" style="color: #999;">${nick}</div>
+                                <div class="status-offline">
+                                    Usuário não estando online no servidor 19
+                                </div>
+                            </div>
+                        `;
+                    }
+                });
+
+                main.innerHTML = headerHtml + `<div class="combat-table">${onlineHtml + offlineHtml}</div>`;
             }
             else {
                 const bossData = allData.filter(d => d.boss === currentTab);
