@@ -372,7 +372,7 @@
         let mostrarTodosDoDashboard = localStorage.getItem('blood_show_all') === 'true';
 
         window.addEventListener('DOMContentLoaded', () => {
-            if (localStorage.getItem('blood_admin_logged'] === 'true') {
+            if (localStorage.getItem('blood_admin_logged') === 'true') {
                 document.getElementById('loginSection').style.display = 'none';
                 document.getElementById('configSection').style.display = 'block';
                 document.getElementById('chkShowAll').checked = mostrarTodosDoDashboard;
@@ -611,7 +611,6 @@
                             let currentBlue = users[nick][0];
                             let currentRed = users[nick][1];
 
-                            // SÓ SALVA NA PLANILHA SE NÃO TIVER NENHUM PONTO ZERO REGISTRADO HOJE AINDA
                             if (!globalBaseline[nick]) {
                                 globalBaseline[nick] = { blue: currentBlue, red: currentRed };
                                 if (SPREADSHEET_API && SPREADSHEET_API !== "SUA_URL_DO_APPS_SCRIPT_AQUI") {
