@@ -3,207 +3,182 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hunter Boss Radar - Real Time</title>
+    <title>Blood Esports | Boss Radar</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Teko:wght@500;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-color: #0A0A0A;
-            --panel-bg: #1A1A1A;
-            --primary: #D90000;
-            --text-main: #E0E0E0;
-            --text-muted: #888888;
-            --green: #00FF00;
-            --yellow: #FFD700;
-            --blue: #4AA3DF;
+            --bg-dark: #050505;
+            --bg-panel: #111111;
+            --bg-card: #1a1a1a;
+            --blood-red: #da0000;
+            --blood-dark: #8a0000;
+            --text-main: #f0f0f0;
+            --text-muted: #777777;
+            --live-green: #00e676;
+            --unknown-grey: #555555;
+            --border-color: #222;
         }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
-            background-color: var(--bg-color);
+            background-color: var(--bg-dark);
             color: var(--text-main);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 20px;
+            font-family: 'Inter', sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
+            min-height: 100vh;
         }
 
-        h1 {
-            color: var(--primary);
-            text-transform: uppercase;
-            font-family: 'Impact', sans-serif;
-            letter-spacing: 2px;
-            font-size: 2.5rem;
-            margin-bottom: 5px;
-            border-bottom: 2px solid var(--primary);
-            padding-bottom: 10px;
-        }
-        
-        .status-bar {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 30px;
-            font-size: 1rem;
-            font-weight: bold;
-            padding: 10px 20px;
-            border-radius: 5px;
-            background-color: #151515;
-            border: 1px solid #333;
-        }
-
-        .status-dot {
-            height: 12px;
-            width: 12px;
-            background-color: var(--green);
-            border-radius: 50%;
-            display: inline-block;
-            box-shadow: 0 0 8px var(--green);
-        }
-
-        .loading .status-dot {
-            background-color: var(--yellow);
-            box-shadow: 0 0 8px var(--yellow);
-            animation: pulse 1s infinite;
-        }
-
-        .error .status-dot {
-            background-color: var(--primary);
-            box-shadow: 0 0 8px var(--primary);
-        }
-
-        .container {
-            display: flex;
-            gap: 20px;
-            max-width: 1000px;
+        /* HEADER & BRANDING */
+        header {
             width: 100%;
-            flex-direction: column;
-        }
-
-        .panel {
-            background-color: var(--panel-bg);
-            border: 1px solid #333;
-            border-radius: 8px;
-            padding: 20px;
-            width: 100%;
-            box-sizing: border-box;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-        }
-
-        .panel h2 {
-            color: var(--primary);
-            margin-top: 0;
-            font-size: 1.5rem;
-            border-bottom: 1px solid #333;
-            padding-bottom: 10px;
+            background: linear-gradient(180deg, #110000 0%, var(--bg-dark) 100%);
+            border-bottom: 1px solid var(--blood-dark);
+            padding: 20px 0;
             display: flex;
-            justify-content: space-between;
+            flex-direction: column;
             align-items: center;
+            position: relative;
         }
 
-        .last-update {
-            font-size: 0.9rem;
-            color: var(--text-muted);
-            font-weight: normal;
-        }
+        .logo-container img { height: 80px; object-fit: contain; margin-bottom: 10px; }
 
-        .boss-card {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px;
-            border-bottom: 1px solid #2A2A2A;
-            background-color: #151515;
-            margin-bottom: 8px;
-            border-radius: 5px;
-            border-left: 4px solid #333;
-        }
-        
-        .boss-card.spawning {
-            border-left: 4px solid var(--primary);
-            background-color: #2a0b0b;
-        }
-        
-        .boss-card.close {
-            border-left: 4px solid var(--yellow);
-        }
-
-        .boss-info, .boss-server {
-            display: flex;
-            flex-direction: column;
-            width: 30%;
-        }
-
-        .boss-name {
-            font-weight: bold;
-            font-size: 1.2rem;
-            color: #fff;
-        }
-
-        .killer-name {
-            color: var(--primary);
-            font-weight: bold;
-        }
-
-        .server-name {
-            font-weight: bold;
-            font-size: 1.1rem;
-            color: var(--blue);
-        }
-
-        .boss-desc {
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            margin-top: 4px;
-        }
-
-        .timer-container {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            width: 35%;
-        }
-
-        .timer {
-            font-family: monospace;
-            font-size: 1.4rem;
-            font-weight: bold;
-        }
-        
-        .time-detail {
+        .status-badge {
+            background-color: rgba(218, 0, 0, 0.1);
+            border: 1px solid var(--blood-red);
+            color: var(--blood-red);
+            padding: 4px 12px;
+            border-radius: 20px;
             font-size: 0.8rem;
-            color: var(--text-muted);
-            margin-top: 4px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
-        @keyframes pulse {
-            0% { opacity: 0.5; }
-            50% { opacity: 1; }
-            100% { opacity: 0.5; }
+        .status-badge.synced {
+            border-color: var(--live-green);
+            color: var(--live-green);
+            background-color: rgba(0, 230, 118, 0.1);
         }
+
+        .dot {
+            width: 8px; height: 8px; border-radius: 50%;
+            background-color: currentColor; box-shadow: 0 0 8px currentColor;
+        }
+
+        /* NAVEGAÇÃO / ABAS */
+        .nav-container {
+            width: 100%; max-width: 1200px; margin: 30px auto 15px auto;
+            display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; padding: 0 20px;
+        }
+
+        .nav-btn {
+            background-color: var(--bg-panel); color: var(--text-muted);
+            border: 1px solid var(--border-color); padding: 10px 20px;
+            border-radius: 6px; font-family: 'Teko', sans-serif; font-size: 1.3rem;
+            letter-spacing: 1px; cursor: pointer; transition: all 0.2s ease; text-transform: uppercase;
+        }
+
+        .nav-btn:hover { color: var(--text-main); border-color: #444; }
+        .nav-btn.active {
+            background-color: var(--blood-red); color: #fff;
+            border-color: var(--blood-red); box-shadow: 0 4px 15px rgba(218, 0, 0, 0.3);
+        }
+
+        /* CONTEÚDO PRINCIPAL */
+        main { width: 100%; max-width: 1200px; padding: 0 20px; flex: 1; }
+
+        .section-title {
+            font-family: 'Teko', sans-serif; font-size: 2rem; color: var(--text-main);
+            margin-bottom: 15px; display: flex; justify-content: space-between;
+            align-items: flex-end; border-bottom: 2px solid var(--border-color); padding-bottom: 10px;
+        }
+
+        .last-update { font-family: 'Inter', sans-serif; font-size: 0.85rem; color: var(--text-muted); font-weight: 400; }
+
+        /* GRID COMPACTA */
+        .overview-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; }
+
+        .compact-card {
+            background-color: var(--bg-card); border: 1px solid var(--border-color);
+            border-radius: 8px; padding: 15px; display: flex; flex-direction: column;
+            position: relative; overflow: hidden; border-left: 4px solid var(--border-color);
+        }
+
+        .compact-card.live {
+            border-left-color: var(--blood-red);
+            background: linear-gradient(90deg, rgba(218,0,0,0.1) 0%, rgba(26,26,26,1) 100%);
+        }
+
+        .compact-card.unknown {
+            border-left-color: var(--unknown-grey); opacity: 0.7;
+        }
+
+        .compact-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .boss-name { font-weight: 800; font-size: 1.1rem; color: #fff; }
+        .server-tag { background-color: #333; font-size: 0.75rem; padding: 2px 6px; border-radius: 4px; font-weight: 600; }
+
+        .timer-big { font-family: 'Teko', sans-serif; font-size: 2.2rem; line-height: 1; color: var(--text-main); margin-bottom: 5px; }
+        .timer-big.live-text { color: var(--blood-red); animation: pulse-text 1.5s infinite; }
+        .timer-big.unknown-text { color: var(--unknown-grey); font-size: 1.8rem; }
+
+        .date-sub { font-size: 0.8rem; color: var(--text-muted); }
+        .date-sub.prediction { color: #4AA3DF; font-weight: 600; }
+
+        /* LISTA DETALHADA */
+        .server-list { display: flex; flex-direction: column; gap: 8px; }
+
+        .server-row {
+            display: flex; justify-content: space-between; align-items: center;
+            background-color: var(--bg-card); border: 1px solid var(--border-color);
+            padding: 12px 20px; border-radius: 6px; border-left: 4px solid #333;
+        }
+
+        .server-row.live-row { border-color: var(--blood-red); border-left: 4px solid var(--blood-red); }
+        .server-row.unknown-row { opacity: 0.7; border-left: 4px solid var(--unknown-grey); }
+
+        .col-server { width: 10%; font-weight: 800; font-size: 1.2rem; color: #fff; }
+        .col-killer { width: 35%; font-size: 0.9rem; color: var(--text-muted); }
+        .col-killer span { color: var(--text-main); font-weight: 600; }
+        .col-date { width: 30%; font-size: 0.85rem; color: #4AA3DF; text-align: center; font-weight: 600; }
+        .col-timer { width: 25%; font-family: 'Teko', sans-serif; font-size: 1.8rem; text-align: right; }
+        
+        .empty-row { opacity: 0.4; background-color: transparent; border-style: dashed; }
+
+        footer {
+            margin-top: 40px; padding: 20px; text-align: center; border-top: 1px solid var(--border-color);
+            width: 100%; font-size: 0.85rem; color: var(--text-muted);
+        }
+        .coupon { color: var(--blood-red); font-weight: 800; letter-spacing: 1px; }
+
+        @keyframes pulse-text { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
     </style>
 </head>
 <body>
 
-    <h1>HUNTER BOSS RADAR</h1>
-    
-    <div class="status-bar loading" id="status-bar">
-        <span class="status-dot"></span>
-        <span id="status-text">Iniciando sincronização no Vercel...</span>
-    </div>
-
-    <div class="container" id="main-container" style="display: none;">
-        <div class="panel">
-            <h2>
-                <span>Próximos Nascimentos</span>
-                <span class="last-update" id="last-update-time">Última checagem: --:--</span>
-            </h2>
-            <div id="boss-list">
-                <!-- Injetado via JS -->
-            </div>
+    <header>
+        <div class="logo-container">
+            <img src="undefined_-_Imgur.jpg" alt="Blood Esports">
         </div>
-    </div>
+        <div class="status-badge" id="status-badge">
+            <div class="dot"></div>
+            <span id="status-text">Conectando ao Dashboard Oficial...</span>
+        </div>
+    </header>
+
+    <div class="nav-container" id="nav-container"></div>
+    <main id="main-content"></main>
+
+    <footer>
+        Blood Esports © 2026 | Preditive Tracking System<br>
+        Apoie a guilda usando o cupom: <span class="coupon">xRasGhulx40</span>
+    </footer>
 
     <script>
+        // MATEMÁTICA EXATA DA PLANILHA (Sincronização Absoluta)
         const respawnRules = {
             "Selupan": 34.16667,
             "Nightmare": 40.16667,
@@ -214,53 +189,54 @@
             "God of Darkness": 72
         };
 
-        let activeBosses = [];
+        const totalServers = 19;
+        let allData = [];
+        let currentTab = 'Visão Geral';
 
         function parseBrazilianDate(dateString) {
             const match = dateString.match(/(\d{2})\/(\d{2})\/(\d{4})[^\d]+(\d{2}):(\d{2}):(\d{2})/);
-            if (match) {
-                return new Date(match[3], match[2] - 1, match[1], match[4], match[5], match[6]);
-            }
+            if (match) { return new Date(match[3], match[2] - 1, match[1], match[4], match[5], match[6]); }
             return new Date(); 
         }
 
-        function formatSpawnDate(dateObj) {
-            if (isNaN(dateObj.getTime())) return "Data Inválida";
+        // JANELA DE CAÇA RESTRITA (10 MINUTOS)
+        function formatSpawnWindow(dateObj) {
+            if (isNaN(dateObj.getTime())) return "N/A";
             const day = String(dateObj.getDate()).padStart(2, '0');
             const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-            const hours = String(dateObj.getHours()).padStart(2, '0');
-            const minutes = String(dateObj.getMinutes()).padStart(2, '0');
-            return `${day}/${month} às ${hours}:${minutes}`;
+            
+            const h1 = String(dateObj.getHours()).padStart(2, '0');
+            const m1 = String(dateObj.getMinutes()).padStart(2, '0');
+            
+            // Adiciona apenas 10 minutos cravados para a margem tática
+            const endWindow = new Date(dateObj.getTime() + (10 * 60000));
+            const h2 = String(endWindow.getHours()).padStart(2, '0');
+            const m2 = String(endWindow.getMinutes()).padStart(2, '0');
+
+            return `${day}/${month} • ${h1}:${m1} - ${h2}:${m2}`;
         }
 
         async function fetchBossLogs() {
-            const statusBar = document.getElementById('status-bar');
+            const badge = document.getElementById('status-badge');
             const statusText = document.getElementById('status-text');
             
-            statusBar.className = 'status-bar loading';
-            statusText.innerText = activeBosses.length === 0 ? "Buscando logs oficiais..." : "Sincronizando radares...";
-            
             try {
+                badge.className = 'status-badge';
+                statusText.innerText = "Sincronizando Módulos...";
+                
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 8000);
-                
-                // Mudança crucial aqui: apontamos para a SUA rota da API no Vercel
                 const response = await fetch('/api/bosses', { signal: controller.signal });
                 clearTimeout(timeoutId);
                 
-                if (!response.ok) {
-                    throw new Error("Erro no servidor do Vercel");
-                }
+                if (!response.ok) throw new Error("Erro no servidor");
 
                 const htmlText = await response.text();
-                
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(htmlText, 'text/html');
                 const rows = doc.querySelectorAll('table tbody tr');
                 
-                if (rows.length === 0) {
-                    throw new Error("Tabela vazia ou bloqueada pelo anti-DDoS.");
-                }
+                if (rows.length === 0) throw new Error("Bloqueio de proteção");
 
                 const latestKills = {};
 
@@ -271,56 +247,43 @@
                         const bossName = columns[1].textContent.trim();
                         const killedBy = columns[2].textContent.trim();
                         const server = columns[3].textContent.trim();
-                        const map = columns[4].textContent.trim();
 
                         if (respawnRules[bossName]) {
                             const uniqueKey = bossName + "_" + server;
-                            
                             if (!latestKills[uniqueKey]) {
                                 const killDate = parseBrazilianDate(dateStr);
                                 const respawnMs = respawnRules[bossName] * 60 * 60 * 1000;
                                 const spawnDate = new Date(killDate.getTime() + respawnMs);
                                 
                                 latestKills[uniqueKey] = {
-                                    boss: bossName,
-                                    server: server,
-                                    map: map,
-                                    lastKiller: killedBy,
-                                    killDate: killDate,
-                                    spawnDate: spawnDate
+                                    boss: bossName, server: server,
+                                    lastKiller: killedBy, killDate: killDate, spawnDate: spawnDate
                                 };
                             }
                         }
                     }
                 });
 
-                activeBosses = Object.values(latestKills).sort((a, b) => a.spawnDate - b.spawnDate);
-                
-                statusBar.className = 'status-bar';
-                statusText.innerText = "Radar Ao Vivo - Sincronizado";
-                
-                const now = new Date();
-                document.getElementById('last-update-time').innerText = `Última checagem: ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
-                
-                document.getElementById('main-container').style.display = 'flex';
-                updateVisualTimers(); 
+                allData = Object.values(latestKills).sort((a, b) => a.spawnDate - b.spawnDate);
+                badge.className = 'status-badge synced'; statusText.innerText = "Dashboard Conectado";
+                renderUI();
 
             } catch (error) {
-                statusBar.className = 'status-bar error';
-                if (activeBosses.length > 0) {
-                    statusText.innerText = "Falha ao conectar. Mantendo informações na tela...";
-                } else {
-                    statusText.innerText = "Erro ao carregar os dados. Verifique a aba de Logs no Vercel.";
-                }
+                badge.className = 'status-badge'; statusText.innerText = "Buscando Padrões...";
             }
         }
 
-        function formatTimeLeft(ms) {
-            if (isNaN(ms)) return "Erro de Cálculo";
-            if (ms <= 0) return "NASCENDO / VIVO!";
+        // LIMBO DE 2 HORAS CASO O BOSS NÃO APAREÇA
+        function formatTimeState(ms) {
+            if (ms <= 0) {
+                // Se passou de 2 horas (7.200.000 ms) sem log novo, marca como desconhecido
+                if (Math.abs(ms) > 7200000) {
+                    return { text: "DESCONHECIDO", state: 'unknown' };
+                }
+                return { text: "AO VIVO", state: 'live' };
+            }
             
             let totalSeconds = Math.floor(ms / 1000);
-            
             let days = Math.floor(totalSeconds / (3600 * 24));
             let hours = Math.floor((totalSeconds % (3600 * 24)) / 3600);
             let minutes = Math.floor((totalSeconds % 3600) / 60);
@@ -328,62 +291,90 @@
             
             let timeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
             
-            if (days > 1) {
-                return `${days} dias, ${timeString}`;
-            } else if (days === 1) {
-                return `1 dia, ${timeString}`;
+            if (days > 1) return { text: `${days}d ${timeString}`, state: 'waiting' };
+            if (days === 1) return { text: `1d ${timeString}`, state: 'waiting' };
+            return { text: timeString, state: 'waiting' };
+        }
+
+        function setupNavigation() {
+            const nav = document.getElementById('nav-container');
+            const bosses = ["Visão Geral", ...Object.keys(respawnRules)];
+            nav.innerHTML = bosses.map(boss => `<button class="nav-btn ${boss === currentTab ? 'active' : ''}" onclick="changeTab('${boss}')">${boss}</button>`).join('');
+        }
+
+        window.changeTab = function(tabName) {
+            currentTab = tabName; setupNavigation(); renderUI();
+        }
+
+        function renderUI() {
+            const main = document.getElementById('main-content');
+            const now = new Date().getTime();
+            const timeStr = new Date().toLocaleTimeString('pt-BR', { hour12: false });
+            
+            const headerHtml = `<div class="section-title"><span>${currentTab.toUpperCase()}</span><span class="last-update">Atualizado às ${timeStr}</span></div>`;
+
+            if (currentTab === 'Visão Geral') {
+                const topBosses = allData.slice(0, 12);
+                const cardsHtml = topBosses.map(data => {
+                    const diff = data.spawnDate.getTime() - now;
+                    const timeData = formatTimeState(diff);
+                    
+                    let subTextHtml = "";
+                    if (timeData.state === 'live') { subTextHtml = "Organize a Party e procure no mapa!"; }
+                    else if (timeData.state === 'unknown') { subTextHtml = `Última kill: ${formatSpawnWindow(data.killDate).split('•')[0]}`; }
+                    else { subTextHtml = `Prev: <span class="prediction">${formatSpawnWindow(data.spawnDate)}</span>`; }
+
+                    return `
+                        <div class="compact-card ${timeData.state === 'live' ? 'live' : ''} ${timeData.state === 'unknown' ? 'unknown' : ''}">
+                            <div class="compact-header"><span class="boss-name">${data.boss}</span><span class="server-tag">${data.server}</span></div>
+                            <div class="timer-big ${timeData.state === 'live' ? 'live-text' : ''} ${timeData.state === 'unknown' ? 'unknown-text' : ''}">${timeData.text}</div>
+                            <div class="date-sub">${subTextHtml}</div>
+                        </div>
+                    `;
+                }).join('');
+                main.innerHTML = headerHtml + `<div class="overview-grid">${cardsHtml}</div>`;
             } else {
-                return timeString;
+                const bossData = allData.filter(d => d.boss === currentTab);
+                const serverMap = {};
+                bossData.forEach(d => serverMap[d.server.toUpperCase()] = d);
+
+                let rowsHtml = '';
+                for (let i = 1; i <= totalServers; i++) {
+                    const svName = `SV${i}`;
+                    const data = serverMap[svName];
+
+                    if (data) {
+                        const diff = data.spawnDate.getTime() - now;
+                        const timeData = formatTimeState(diff);
+                        
+                        let dateColHtml = "";
+                        if (timeData.state === 'live') { dateColHtml = "NASCENDO / VIVO"; }
+                        else if (timeData.state === 'unknown') { dateColHtml = "Aguardando novo padrão"; }
+                        else { dateColHtml = formatSpawnWindow(data.spawnDate); }
+
+                        let color = "var(--text-main)";
+                        if (timeData.state === 'live') color = "var(--blood-red)";
+                        if (timeData.state === 'unknown') color = "var(--unknown-grey)";
+
+                        rowsHtml += `
+                            <div class="server-row ${timeData.state === 'live' ? 'live-row' : ''} ${timeData.state === 'unknown' ? 'unknown-row' : ''}">
+                                <div class="col-server">${data.server}</div>
+                                <div class="col-killer">Última Kill: <span>${data.lastKiller}</span></div>
+                                <div class="col-date" style="color: ${timeData.state === 'unknown' ? 'var(--unknown-grey)' : ''}">${dateColHtml}</div>
+                                <div class="col-timer" style="color: ${color}">${timeData.text}</div>
+                            </div>
+                        `;
+                    } else {
+                        rowsHtml += `<div class="server-row empty-row"><div class="col-server">Sv${i}</div><div class="col-killer">Nenhum log no sistema</div><div class="col-date">--/--</div><div class="col-timer" style="color: var(--text-muted)">--:--:--</div></div>`;
+                    }
+                }
+                main.innerHTML = headerHtml + `<div class="server-list">${rowsHtml}</div>`;
             }
         }
 
-        function updateVisualTimers() {
-            if (activeBosses.length === 0) return;
-            
-            const container = document.getElementById("boss-list");
-            const now = new Date().getTime();
-            
-            let htmlContent = "";
-
-            activeBosses.forEach(bossData => {
-                let diff = bossData.spawnDate.getTime() - now;
-                let statusClass = "";
-                let color = "var(--green)";
-                let timeText = formatTimeLeft(diff);
-
-                if (diff <= 0) {
-                    statusClass = "spawning";
-                    color = "var(--primary)";
-                } else if (diff <= (3600 * 1000)) { 
-                    statusClass = "close";
-                    color = "var(--yellow)";
-                }
-
-                htmlContent += `
-                    <div class="boss-card ${statusClass}">
-                        <div class="boss-info">
-                            <span class="boss-name">${bossData.boss}</span>
-                            <span class="boss-desc">Morto por: <span class="killer-name">${bossData.lastKiller}</span></span>
-                        </div>
-                        <div class="boss-server">
-                            <span class="server-name">${bossData.server}</span>
-                            <span class="boss-desc">${bossData.map}</span>
-                        </div>
-                        <div class="timer-container">
-                            <div class="timer" style="color: ${color}">${timeText}</div>
-                            <div class="time-detail">Nasce: ${formatSpawnDate(bossData.spawnDate)}</div>
-                        </div>
-                    </div>
-                `;
-            });
-
-            container.innerHTML = htmlContent;
-        }
-
-        fetchBossLogs();
-        setInterval(updateVisualTimers, 1000);
+        setupNavigation(); fetchBossLogs();
+        setInterval(renderUI, 1000);
         setInterval(fetchBossLogs, 10 * 1000);
-
     </script>
 </body>
 </html>
