@@ -345,7 +345,7 @@
             if (event.ctrlKey && (event.key === 'U' || event.key === 'u')) event.preventDefault();
         });
 
-        const SPREADSHEET_API = "https://script.google.com/macros/s/AKfycbyj56_mZhYi0jH_oIzqGYZt1DaWVw99C4phJXEf4NCIWwnrKnY29gLPQ9WZSzgYN8R9uA/exec"; 
+        const SPREADSHEET_API = "https://script.google.com/macros/s/AKfycbwfdGawNSh2mkGqathisGmPks9trlKGLUWdCpNRG868lj7JSbE8x7wlEeskpNms0BIZGA/exec"; 
         let guildMembersList = [];
         const MAX_MEMBERS = 30;
 
@@ -366,7 +366,6 @@
 
         const dataDeHoje = new Date().toLocaleDateString('pt-BR');
         
-        // CARREGAMENTO INSTANTÂNEO (Usa a memória local imediatamente para não travar a tela)
         let dailyScores = JSON.parse(localStorage.getItem('blood_daily_scores_' + dataDeHoje)) || {};
         let globalBaseline = {}; 
         let lastGasSyncTime = 0; 
@@ -380,9 +379,36 @@
                 document.getElementById('chkShowAll').checked = mostrarTodosDoDashboard;
                 fetchMembersForAdmin();
             }
-            // Desenha a tela IMEDIATAMENTE com o que estiver na memória local
+            // Força a leitura imediata da planilha ao abrir o site para puxar o Costureiro e o klopp já somados
+            fetchSheetScoresOnStart();
             renderUI();
         });
+
+        async function fetchSheetScoresOnStart() {
+            if (!SPREADSHEET_API || SPREADSHEET_API === "SUA_URL_DO_APPS_SCRIPT_AQUI") return;
+            try {
+                const res = await fetch(`${SPREADSHEET_API}?action=getPublicData`);
+                const json = await res.json();
+                if (json.members) guildMembersList = json.members.slice(0, MAX_MEMBERS);
+                if (json.baseline) globalBaseline = json.baseline;
+                
+                if (json.dailyScores) {
+                    const guildLower = guildMembersList.map(n => n.toLowerCase());
+                    for (let n in json.dailyScores) {
+                        dailyScores[n] = {
+                            player: n,
+                            blue: json.dailyScores[n].blue,
+                            red: json.dailyScores[n].red,
+                            isGuild: guildLower.includes(n.toLowerCase()),
+                            isOnline: false
+                        };
+                    }
+                    localStorage.setItem('blood_daily_scores_' + dataDeHoje, JSON.stringify(dailyScores));
+                    processCombatArray();
+                    renderUI();
+                }
+            } catch(e) {}
+        }
 
         function toggleAdminPanel() {
             const panel = document.getElementById('adminPanel');
@@ -398,7 +424,8 @@
         function toggleShowAll() {
             mostrarTodosDoDashboard = document.getElementById('chkShowAll').checked;
             localStorage.setItem('blood_show_all', mostrarTodosDoDashboard);
-            fetchDashboardCombat();
+            processCombatArray();
+            renderUI();
         }
 
         async function doLogin() {
@@ -445,7 +472,7 @@
         }
 
         function handleNickKey(e) {
-            if (e.key === 'Enter') {
+            if (event.key === 'Enter') {
                 e.preventDefault();
                 addNickTag();
             }
@@ -518,7 +545,6 @@
                 const data = await res.json();
                 if (data.success) {
                     alert("Membros atualizados com sucesso na planilha!");
-                    lastGasSyncTime = 0; 
                     fetchDashboardCombat();
                 }
             } catch(e) {
@@ -564,37 +590,53 @@
             return `${day}/${month} • ${h1}:${m1} - ${h2}:${m2}`;
         }
 
+        function processCombatArray() {
+            let liveArray = [];
+            const guildLower = guildMembersList.map(n => n.toLowerCase());
+            for (let n in dailyScores) {
+                const isGuildMember = guildLower.includes(n.toLowerCase());
+                dailyScores[n].isGuild = isGuildMember;
+                if (mostrarTodosDoDashboard || isGuildMember) {
+                    liveArray.push(dailyScores[n]);
+                }
+            }
+            if (liveArray.length > 0) {
+                combatData = liveArray.sort((a, b) => parseFloat(b.blue.replace('k','')) - parseFloat(a.blue.replace('k','')));
+            } else {
+                combatData = [];
+            }
+        }
+
         async function fetchDashboardCombat() {
             const nowMs = new Date().getTime();
             
             try {
-                // Sincroniza com a planilha em segundo plano a cada 30 segundos sem travar a tela
-                if (SPREADSHEET_API && SPREADSHEET_API !== "SUA_URL_DO_APPS_SCRIPT_AQUI" && (nowMs - lastGasSyncTime > 30000)) {
+                // Sincroniza com a planilha a cada 15 segundos em segundo plano
+                if (SPREADSHEET_API && SPREADSHEET_API !== "SUA_URL_DO_APPS_SCRIPT_AQUI" && (nowMs - lastGasSyncTime > 15000)) {
                     fetch(`${SPREADSHEET_API}?action=getPublicData`)
                         .then(res => res.json())
                         .then(sheetJson => {
                             if (sheetJson.members) { guildMembersList = sheetJson.members.slice(0, MAX_MEMBERS); }
                             if (sheetJson.baseline) { globalBaseline = sheetJson.baseline; }
                             
-                            // Puxa o consolidado direto da aba Registros da planilha
                             if (sheetJson.dailyScores) {
                                 const guildLower = guildMembersList.map(n => n.toLowerCase());
                                 for (let n in sheetJson.dailyScores) {
-                                    dailyScores[n] = {
-                                        player: n,
-                                        blue: sheetJson.dailyScores[n].blue,
-                                        red: sheetJson.dailyScores[n].red,
-                                        isGuild: guildLower.includes(n.toLowerCase()),
-                                        isOnline: false
-                                    };
+                                    if (!dailyScores[n]) dailyScores[n] = {};
+                                    dailyScores[n].player = n;
+                                    dailyScores[n].blue = sheetJson.dailyScores[n].blue;
+                                    dailyScores[n].red = sheetJson.dailyScores[n].red;
+                                    dailyScores[n].isGuild = guildLower.includes(n.toLowerCase());
                                 }
                                 localStorage.setItem('blood_daily_scores_' + dataDeHoje, JSON.stringify(dailyScores));
+                                processCombatArray();
+                                renderUI();
                             }
                         }).catch(e => {});
                     lastGasSyncTime = nowMs;
                 }
 
-                // LÊ O MEGA MU EM SEGUNDO PLANO
+                // LÊ O MEGA MU AO VIVO (PROXY ALLORIGINS)
                 const apiURL = 'https://dashboard.megamu.net/dashboard-s14/data1.4.php';
                 const cacheBuster = '?t=' + nowMs;
                 const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(apiURL + cacheBuster)}`;
@@ -611,7 +653,7 @@
                         const guildLower = guildMembersList.map(n => n.toLowerCase());
 
                         for (let n in dailyScores) {
-                            dailyScores[n].isOnline = false;
+                            if (dailyScores[n]) dailyScores[n].isOnline = false;
                         }
 
                         for (let nick in users) {
@@ -637,13 +679,12 @@
                                 const displayBlue = (deltaBlue / 1000).toFixed(1);
                                 const displayRed = (deltaRed / 1000).toFixed(1);
                                 
-                                dailyScores[nick] = {
-                                    player: nick,
-                                    blue: displayBlue + "k",
-                                    red: deltaRed > 0 ? "-" + displayRed + "k" : "0.0k",
-                                    isGuild: isNaLista,
-                                    isOnline: true
-                                };
+                                if (!dailyScores[nick]) dailyScores[nick] = {};
+                                dailyScores[nick].player = nick;
+                                dailyScores[nick].blue = displayBlue + "k";
+                                dailyScores[nick].red = deltaRed > 0 ? "-" + displayRed + "k" : "0.0k";
+                                dailyScores[nick].isGuild = isNaLista;
+                                dailyScores[nick].isOnline = true;
 
                                 if (deltaBlue > 0 || deltaRed > 0) {
                                     const syncKey = `${deltaBlue}_${deltaRed}`;
@@ -658,19 +699,7 @@
                         }
 
                         localStorage.setItem('blood_daily_scores_' + dataDeHoje, JSON.stringify(dailyScores));
-
-                        let liveArray = [];
-                        for (let n in dailyScores) {
-                            if (mostrarTodosDoDashboard || dailyScores[n].isGuild) {
-                                liveArray.push(dailyScores[n]);
-                            }
-                        }
-
-                        if (liveArray.length > 0) {
-                            combatData = liveArray.sort((a, b) => parseFloat(b.blue.replace('k','')) - parseFloat(a.blue.replace('k','')));
-                        } else {
-                            combatData = [];
-                        }
+                        processCombatArray();
                     }
                 }
             } catch(e) {
@@ -803,8 +832,8 @@
                             <div class="combat-rank">${rankCounter++}º</div>
                             <div class="combat-player">${onlineDot}${c.player} ${tagGlobal}</div>
                             <div class="combat-stats">
-                                <span class="stat-blue">${c.blue}</span>
-                                <span class="stat-red">${c.red}</span>
+                                <span class="stat-blue">${c.blue || "0.0k"}</span>
+                                <span class="stat-red">${c.red || "0.0k"}</span>
                             </div>
                         </div>
                     `;
@@ -818,7 +847,7 @@
                                 <div class="combat-player" style="color: #999;">${nick}</div>
                                 <div class="status-offline">
                                     0.0k (Aguardando hunt)
-                                </div>
+                                    </div>
                             </div>
                         `;
                     }
