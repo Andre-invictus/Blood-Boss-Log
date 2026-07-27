@@ -373,7 +373,7 @@
         let mostrarTodosDoDashboard = localStorage.getItem('blood_show_all') === 'true';
 
         window.addEventListener('DOMContentLoaded', () => {
-            if (localStorage.getItem('blood_admin_logged'] === 'true') {
+            if (localStorage.getItem('blood_admin_logged') === 'true') {
                 document.getElementById('loginSection').style.display = 'none';
                 document.getElementById('configSection').style.display = 'block';
                 document.getElementById('chkShowAll').checked = mostrarTodosDoDashboard;
@@ -747,7 +747,6 @@
                     }
                 });
 
-                // ORDENAÇÃO POR RESPAWN (Do que vai nascer mais cedo para o que vai demorar mais)
                 allData = Object.values(latestKills).sort((a, b) => a.spawnDate - b.spawnDate);
                 renderUI();
             } catch (error) {}
@@ -787,7 +786,6 @@
             const headerHtml = `<div class="section-title"><span>${currentTab.toUpperCase()}</span><span class="last-update">Atualizado às ${timeStr}</span></div>`;
 
             if (currentTab === 'Visão Geral') {
-                // ORDENADO POR RESPAWN NA VISÃO GERAL
                 const sortedBosses = [...allData].sort((a, b) => a.spawnDate.getTime() - b.spawnDate.getTime());
                 const topBosses = sortedBosses.slice(0, 12);
                 
@@ -857,7 +855,6 @@
                 main.innerHTML = headerHtml + `<div class="combat-table">${onlineHtml + offlineHtml}</div>`;
             }
             else {
-                // ABAS DOS BOSSES INDIVIDUAIS: ORDENADAS POR RESPAWN (O que vai nascer mais cedo aparece primeiro)
                 const bossData = allData.filter(d => d.boss === currentTab);
                 bossData.sort((a, b) => a.spawnDate.getTime() - b.spawnDate.getTime());
 
