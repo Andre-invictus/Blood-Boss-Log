@@ -148,11 +148,43 @@
         
         .empty-row { opacity: 0.4; background-color: transparent; border-style: dashed; }
 
+        /* FOOTER PROFISSIONAL */
         footer {
-            margin-top: 40px; padding: 20px; text-align: center; border-top: 1px solid var(--border-color);
-            width: 100%; font-size: 0.85rem; color: var(--text-muted);
+            margin-top: 50px;
+            padding: 30px 20px;
+            width: 100%;
+            background: linear-gradient(0deg, #0a0a0a 0%, var(--bg-dark) 100%);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
         }
-        .coupon { color: var(--blood-red); font-weight: 800; letter-spacing: 1px; }
+
+        .support-banner {
+            background-color: var(--bg-panel);
+            border: 1px solid var(--border-color);
+            padding: 10px 25px;
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+
+        .coupon-highlight {
+            color: #fff;
+            background-color: var(--blood-red);
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            font-size: 1.05rem;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            text-transform: uppercase;
+        }
 
         @keyframes pulse-text { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
     </style>
@@ -165,7 +197,7 @@
         </div>
         <div class="status-badge" id="status-badge">
             <div class="dot"></div>
-            <span id="status-text">Conectando ao Dashboard Oficial...</span>
+            <span id="status-text">Conectando ao Radar...</span>
         </div>
     </header>
 
@@ -173,12 +205,13 @@
     <main id="main-content"></main>
 
     <footer>
-        Blood Esports © 2026 | Preditive Tracking System<br>
-        Apoie a guilda usando o cupom: <span class="coupon">xRasGhulx40</span>
+        <div class="support-banner">
+            <span>Fortaleça a guilda usando o cupom:</span>
+            <span class="coupon-highlight">xRasGhulx40</span>
+        </div>
     </footer>
 
     <script>
-        // MATEMÁTICA EXATA DA PLANILHA (Sincronização Absoluta)
         const respawnRules = {
             "Selupan": 34.16667,
             "Nightmare": 40.16667,
@@ -199,7 +232,6 @@
             return new Date(); 
         }
 
-        // JANELA DE CAÇA RESTRITA (10 MINUTOS)
         function formatSpawnWindow(dateObj) {
             if (isNaN(dateObj.getTime())) return "N/A";
             const day = String(dateObj.getDate()).padStart(2, '0');
@@ -208,7 +240,6 @@
             const h1 = String(dateObj.getHours()).padStart(2, '0');
             const m1 = String(dateObj.getMinutes()).padStart(2, '0');
             
-            // Adiciona apenas 10 minutos cravados para a margem tática
             const endWindow = new Date(dateObj.getTime() + (10 * 60000));
             const h2 = String(endWindow.getHours()).padStart(2, '0');
             const m2 = String(endWindow.getMinutes()).padStart(2, '0');
@@ -236,7 +267,7 @@
                 const doc = parser.parseFromString(htmlText, 'text/html');
                 const rows = doc.querySelectorAll('table tbody tr');
                 
-                if (rows.length === 0) throw new Error("Bloqueio de proteção");
+                if (rows.length === 0) throw new Error("Tabela não encontrada");
 
                 const latestKills = {};
 
@@ -265,7 +296,7 @@
                 });
 
                 allData = Object.values(latestKills).sort((a, b) => a.spawnDate - b.spawnDate);
-                badge.className = 'status-badge synced'; statusText.innerText = "Dashboard Conectado";
+                badge.className = 'status-badge synced'; statusText.innerText = "Radar Preditivo Online";
                 renderUI();
 
             } catch (error) {
@@ -273,10 +304,8 @@
             }
         }
 
-        // LIMBO DE 2 HORAS CASO O BOSS NÃO APAREÇA
         function formatTimeState(ms) {
             if (ms <= 0) {
-                // Se passou de 2 horas (7.200.000 ms) sem log novo, marca como desconhecido
                 if (Math.abs(ms) > 7200000) {
                     return { text: "DESCONHECIDO", state: 'unknown' };
                 }
