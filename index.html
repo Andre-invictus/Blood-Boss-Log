@@ -345,7 +345,7 @@
             if (event.ctrlKey && (event.key === 'U' || event.key === 'u')) event.preventDefault();
         });
 
-        const SPREADSHEET_API = "https://script.google.com/macros/s/AKfycbxYvnzdAe1S2CK8BXNX9BtS7s0cqUm6tJECSygG9YnQ-FDUGvJQKaA2wGQJJHMb79SbYQ/exec"; 
+        const SPREADSHEET_API = "https://script.google.com/macros/s/AKfycbyRV7MPi5SAI2H1j_q4bQnzYezKSrr47nu7wUnTAMhYKZls1aVZWeLAtb94EIZuM-ox/exec"; 
         let guildMembersList = [];
         const MAX_MEMBERS = 30;
 
@@ -559,12 +559,12 @@
             return `${day}/${month} • ${h1}:${m1} - ${h2}:${m2}`;
         }
 
-        // MOTOR CENTRALIZADO (Lê e Grava Ponto Zero na Planilha)
+        // MOTOR CENTRALIZADO (Lê a API pelo AllOrigins que funcionou e grava a Baseline na Planilha)
         async function fetchDashboardCombat() {
             const nowMs = new Date().getTime();
             
             try {
-                // Para não bater no limite do Google, pede a base global a cada 30 segundos
+                // Sincroniza a Planilha a cada 30 segundos
                 if (SPREADSHEET_API && SPREADSHEET_API !== "SUA_URL_DO_APPS_SCRIPT_AQUI" && (nowMs - lastGasSyncTime > 30000)) {
                     const sheetRes = await fetch(`${SPREADSHEET_API}?action=getPublicData`);
                     const sheetJson = await sheetRes.json();
@@ -573,13 +573,17 @@
                     lastGasSyncTime = nowMs;
                 }
 
-                // Lê o Mega MU a cada 5 segundos pelo proxy
+                // LÊ O MEGA MU PELO PROXY QUE DEU CERTO NO SEU TESTE (AllOrigins)
                 const apiURL = 'https://dashboard.megamu.net/dashboard-s14/data1.4.php';
-                const proxyUrl = `https://corsproxy.io/?url=${encodeURIComponent(apiURL + '?t=' + nowMs)}`;
+                const cacheBuster = '?t=' + nowMs;
+                const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(apiURL + cacheBuster)}`;
+                
                 const response = await fetch(proxyUrl);
                 
                 if (response.ok) {
-                    const rawJson = await response.json(); 
+                    const proxyData = await response.json();
+                    // O AllOrigins retorna o texto dentro de 'contents', precisa ser parseado
+                    const rawJson = JSON.parse(proxyData.contents); 
                     
                     if (rawJson.events && rawJson.events.length > 0) {
                         const eventData = JSON.parse(rawJson.events[0].data);
@@ -591,9 +595,9 @@
                             let currentBlue = users[nick][0];
                             let currentRed = users[nick][1];
 
-                            // Se ninguém registrou o Ponto Zero dele na planilha hoje, o seu site registra
+                            // Registra o Ponto Zero na planilha se ainda não existir
                             if (!globalBaseline[nick]) {
-                                globalBaseline[nick] = { blue: currentBlue, red: currentRed }; // Preenche rápido na tela
+                                globalBaseline[nick] = { blue: currentBlue, red: currentRed };
                                 if (SPREADSHEET_API && SPREADSHEET_API !== "SUA_URL_DO_APPS_SCRIPT_AQUI") {
                                     fetch(`${SPREADSHEET_API}?action=setBaseline&nick=${encodeURIComponent(nick)}&blue=${currentBlue}&red=${currentRed}`).catch(e => {});
                                 }
@@ -618,7 +622,7 @@
                                     isGuild: isNaLista
                                 };
 
-                                // Gatilho PDF: Se roubou hunt, salva no histórico do Google Sheets
+                                // Gatilho PDF: Salva no Sheets se houve mudança
                                 if (deltaBlue > 0 || deltaRed > 0) {
                                     const syncKey = `${deltaBlue}_${deltaRed}`;
                                     if (lastSyncState[nick] !== syncKey) {
