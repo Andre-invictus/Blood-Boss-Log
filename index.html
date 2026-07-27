@@ -121,7 +121,7 @@
             text-align: center; 
         }
 
-        .admin-panel input {
+        .admin-panel input, .admin-panel select {
             width: 100%; background: #000; border: 1px solid var(--border-color);
             color: #fff; padding: 12px; margin-bottom: 15px; border-radius: 4px; 
             font-family: 'Inter', sans-serif; text-align: center;
@@ -131,7 +131,7 @@
             background-color: var(--blood-red); color: #fff; border: none;
             padding: 10px 25px; font-family: 'Teko', sans-serif; font-size: 1.3rem;
             font-style: italic; cursor: pointer; border-radius: 4px; display: inline-block;
-            margin-top: 5px; transition: background 0.2s;
+            margin-top: 5px; transition: background 0.2s; width: 100%;
         }
         .admin-btn:hover { background-color: #ff1a1a; }
 
@@ -244,10 +244,6 @@
         .stat-blue { color: var(--combat-blue); }
         .stat-red { color: var(--blood-red); }
         
-        .status-offline {
-            font-size: 0.95rem; font-family: 'Inter', sans-serif; font-style: normal; font-weight: 600; color: #777; text-align: right; width: 100%;
-        }
-        
         .section-separator {
             font-family: 'Teko', sans-serif; font-size: 1.4rem; color: var(--text-muted);
             margin: 20px 0 10px 0; border-bottom: 1px dashed var(--border-color); padding-bottom: 5px;
@@ -302,27 +298,51 @@
         <div id="configSection" style="display:none; text-align: left;">
             <p style="color: #00e676; margin-bottom: 10px; font-weight: bold; text-align: center;">Sessão Ativa (Admin)</p>
             
-            <div style="margin: 15px 0; background: #111; padding: 10px; border-radius: 4px; border: 1px solid #333; display: flex; align-items: center; justify-content: center; gap: 10px;">
-                <input type="checkbox" id="chkShowAll" onchange="toggleShowAll()" style="width: 20px; height: 20px; margin: 0; cursor: pointer;">
-                <label for="chkShowAll" style="color: #fff; font-size: 0.95rem; cursor: pointer; user-select: none;">Mostrar TODOS do Dashboard (Global)</label>
+            <!-- LANÇAMENTO MANUAL DE HUNT -->
+            <div style="background: #111; padding: 15px; border-radius: 4px; border: 1px solid var(--blood-red); margin-bottom: 20px;">
+                <p style="color: var(--text-main); font-family: 'Teko', sans-serif; font-size: 1.4rem; margin-bottom: 10px; font-style: italic;">Lançamento Manual de Hunt</p>
+                <label style="font-size: 0.85rem; color: #aaa; display: block; margin-bottom: 3px;">Selecione o Membro:</label>
+                <select id="manualNickSelect" style="margin-bottom:10px;"></select>
+                
+                <div style="display: flex; gap: 10px;">
+                    <div style="flex: 1;">
+                        <label style="font-size: 0.8rem; color: #aaa; display: block; margin-bottom: 3px;">Roubou (ex: 0.3):</label>
+                        <input type="number" step="0.1" id="manualBlueInput" value="0.0" style="margin-bottom:10px;">
+                    </div>
+                    <div style="flex: 1;">
+                        <label style="font-size: 0.8rem; color: #aaa; display: block; margin-bottom: 3px;">Perdeu (ex: 0.1):</label>
+                        <input type="number" step="0.1" id="manualRedInput" value="0.0" style="margin-bottom:10px;">
+                    </div>
+                </div>
+                <button class="admin-btn" style="background-color: #00e676; color: #000;" onclick="submitManualDelta()">Lançar Pontuação</button>
             </div>
 
-            <label style="font-size: 0.85rem; color: #aaa; display: block; margin-bottom: 5px;">Adicionar Nicks (Cole separados por vírgula ou um por um):</label>
+            <label style="font-size: 0.85rem; color: #aaa; display: block; margin-bottom: 5px;">Gerenciar Nicks da Guilda (Sem limite):</label>
             <div class="tag-input-wrapper">
                 <input type="text" id="newNickInput" placeholder="Ex: Nick1, Nick2..." onkeypress="handleNickKey(event)">
-                <button class="admin-btn" style="margin-top:0;" onclick="addNickTag()">Adicionar</button>
+                <button class="admin-btn" style="margin-top:0; width: auto;" onclick="addNickTag()">Adicionar</button>
             </div>
-            <span class="member-counter" id="memberCounter">0 / 30 Membros Monitorados</span>
+            <span class="member-counter" id="memberCounter">0 Membros Monitorados</span>
 
-            <label style="font-size: 0.85rem; color: #aaa; display: block; margin-bottom: 5px;">Membros na Lista:</label>
             <div class="tags-container" id="tagsContainer"></div>
 
             <div style="margin-top: 15px; display: flex; flex-direction: column; gap: 10px;">
-                <button class="admin-btn" style="width:100%; background-color: #00e676; color:#000;" onclick="saveGuildNicks()">Salvar Alterações</button>
+                <button class="admin-btn" style="background-color: #00e676; color:#000;" onclick="saveGuildNicks()">Salvar Lista de Membros</button>
                 
-                <div style="display: flex; gap: 10px; align-items: center; margin-top: 5px;">
-                    <input type="date" id="reportDate" style="margin-bottom:0; flex: 1; background: #000; border: 1px solid var(--border-color); color: #fff; padding: 10px; border-radius: 4px;">
-                    <button class="admin-btn" style="width: auto; background-color: #00b0ff; margin-top:0;" onclick="downloadPDF()">Baixar PDF</button>
+                <!-- RELATÓRIO POR PERÍODO DE DATAS -->
+                <div style="background: #111; padding: 15px; border-radius: 4px; border: 1px solid #00b0ff; margin-top: 10px;">
+                    <p style="color: #00b0ff; font-family: 'Teko', sans-serif; font-size: 1.4rem; margin-bottom: 10px; font-style: italic;">Relatório em PDF por Período</p>
+                    <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                        <div style="flex: 1;">
+                            <label style="font-size: 0.75rem; color: #aaa; display: block;">Data Inicial:</label>
+                            <input type="date" id="reportStartDate" style="margin-bottom:0; padding: 8px; font-size: 0.85rem;">
+                        </div>
+                        <div style="flex: 1;">
+                            <label style="font-size: 0.75rem; color: #aaa; display: block;">Data Final:</label>
+                            <input type="date" id="reportEndDate" style="margin-bottom:0; padding: 8px; font-size: 0.85rem;">
+                        </div>
+                    </div>
+                    <button class="admin-btn" style="background-color: #00b0ff; color: #000;" onclick="downloadPDF()">Baixar Relatório PDF</button>
                 </div>
 
                 <button class="admin-btn" style="background-color: #555; margin-top: 10px;" onclick="doLogout()">Sair da Conta (Logout)</button>
@@ -343,7 +363,6 @@
     </footer>
 
     <script>
-        // BLINDAGEM DE SEGURANÇA
         document.addEventListener('contextmenu', event => event.preventDefault());
         document.addEventListener('keydown', event => {
             if (event.key === 'F12') event.preventDefault();
@@ -351,9 +370,8 @@
             if (event.ctrlKey && (event.key === 'U' || event.key === 'u')) event.preventDefault();
         });
 
-        const SPREADSHEET_API = "https://script.google.com/macros/s/AKfycbwSd1_57MAV4WlHUpJtdM9GaMG2MrvYfiAWZaae3RvVHc3AAsEhFslk8FknpE65fyp6bw/exec"; 
+        const SPREADSHEET_API = "https://script.google.com/macros/s/AKfycbw54moTbLdHNEbYUyDg_pHmd6viKnAD790EOsgzOSCwbOM-iIWrchIeYaiYeEc6QgGeAQ/exec"; 
         let guildMembersList = [];
-        const MAX_MEMBERS = 30;
 
         const respawnRules = {
             "Selupan": 34.16667,
@@ -368,50 +386,110 @@
         const totalServers = 19;
         let allData = [];
         let combatData = [];
-        let currentTab = 'Visão Geral';
-
-        const dataDeHoje = new Date().toLocaleDateString('pt-BR');
-        let dailyScores = JSON.parse(localStorage.getItem('blood_daily_scores_' + dataDeHoje)) || {};
-        let globalBaseline = {}; 
-        let lastGasSyncTime = 0; 
-        let lastSyncState = {}; 
-        let mostrarTodosDoDashboard = localStorage.getItem('blood_show_all') === 'true';
+        let dashboardHuntData = [];
+        let currentTab = 'Roubo de Hunt'; // Inicia direto na aba de Roubo de Hunt
 
         window.addEventListener('DOMContentLoaded', () => {
             if (localStorage.getItem('blood_admin_logged') === 'true') {
                 document.getElementById('loginSection').style.display = 'none';
                 document.getElementById('configSection').style.display = 'block';
-                document.getElementById('chkShowAll').checked = mostrarTodosDoDashboard;
-                fetchMembersForAdmin();
+                fetchDataForSite();
+            } else {
+                fetchDataForSite();
             }
-            fetchSheetScoresOnStart();
-            renderUI();
         });
 
-        async function fetchSheetScoresOnStart() {
+        async function fetchDataForSite() {
             if (!SPREADSHEET_API || SPREADSHEET_API === "SUA_URL_DO_APPS_SCRIPT_AQUI") return;
             try {
                 const res = await fetch(`${SPREADSHEET_API}?action=getPublicData`);
                 const json = await res.json();
-                if (json.members) guildMembersList = json.members.slice(0, MAX_MEMBERS);
-                if (json.baseline) globalBaseline = json.baseline;
+                if (json.members) {
+                    guildMembersList = json.members;
+                    renderTags();
+                    populateManualSelect();
+                }
                 
                 if (json.dailyScores) {
+                    let liveArray = [];
                     const guildLower = guildMembersList.map(n => n.toLowerCase());
+                    
+                    // Garante que todos da guilda apareçam mesmo com 0.0k
+                    guildMembersList.forEach(nick => {
+                        if (!json.dailyScores[nick]) {
+                            json.dailyScores[nick] = { blue: "0.0k", red: "0.0k" };
+                        }
+                    });
+
                     for (let n in json.dailyScores) {
-                        dailyScores[n] = {
+                        let isGuild = guildLower.includes(n.toLowerCase());
+                        liveArray.push({
                             player: n,
                             blue: json.dailyScores[n].blue,
                             red: json.dailyScores[n].red,
-                            isGuild: guildLower.includes(n.toLowerCase()),
-                            isOnline: false
-                        };
+                            isGuild: isGuild,
+                            isOnline: true // No modo manual, todos ficam ativos/visíveis na tabela do dia
+                        });
                     }
-                    localStorage.setItem('blood_daily_scores_' + dataDeHoje, JSON.stringify(dailyScores));
-                    processCombatArray();
+
+                    combatData = liveArray.sort((a, b) => parseFloat(b.blue.replace('k','')) - parseFloat(a.blue.replace('k','')));
                     renderUI();
                 }
             } catch(e) {}
+        }
+
+        function populateManualSelect() {
+            const select = document.getElementById('manualNickSelect');
+            if(select) {
+                select.innerHTML = guildMembersList.map(n => `<option value="${n}">${n}</option>`).join('');
+            }
+        }
+
+        async function submitManualDelta() {
+            const nick = document.getElementById('manualNickSelect').value;
+            const blue = document.getElementById('manualBlueInput').value;
+            const red = document.getElementById('manualRedInput').value;
+
+            if(!nick) { alert("Selecione um membro."); return; }
+
+            try {
+                const res = await fetch(`${SPREADSHEET_API}?action=addManualDelta&nick=${encodeURIComponent(nick)}&blue=${blue}&red=${red}`);
+                const json = await res.json();
+                if(json.success) {
+                    alert("Pontuação lançada com sucesso!");
+                    document.getElementById('manualBlueInput').value = "0.0";
+                    document.getElementById('manualRedInput').value = "0.0";
+                    fetchDataForSite();
+                }
+            } catch(e) {
+                alert("Erro ao enviar pontuação.");
+            }
+        }
+
+        async function fetchDashboardHuntAPI() {
+            try {
+                const apiURL = 'https://dashboard.megamu.net/dashboard-s14/data1.4.php';
+                const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(apiURL + '?t=' + new Date().getTime())}`;
+                const response = await fetch(proxyUrl);
+                if (response.ok) {
+                    const proxyData = await response.json();
+                    const rawJson = JSON.parse(proxyData.contents); 
+                    if (rawJson.events && rawJson.events.length > 0) {
+                        const eventData = JSON.parse(rawJson.events[0].data);
+                        const users = eventData.users;
+                        let arr = [];
+                        for (let u in users) {
+                            arr.push({
+                                player: u,
+                                blue: (users[u][0] / 1000).toFixed(1) + "k",
+                                red: users[u][1] > 0 ? "-" + (users[u][1] / 1000).toFixed(1) + "k" : "0.0k"
+                            });
+                        }
+                        dashboardHuntData = arr.sort((a, b) => parseFloat(b.blue.replace('k','')) - parseFloat(a.blue.replace('k','')));
+                    }
+                }
+            } catch(e) {}
+            renderUI();
         }
 
         function toggleAdminPanel() {
@@ -425,30 +503,10 @@
             }
         }
 
-        function toggleShowAll() {
-            mostrarTodosDoDashboard = document.getElementById('chkShowAll').checked;
-            localStorage.setItem('blood_show_all', mostrarTodosDoDashboard);
-            processCombatArray();
-            renderUI();
-        }
-
         async function doLogin() {
             const user = document.getElementById('adminUser').value;
             const pass = document.getElementById('adminPass').value;
             
-            if(!SPREADSHEET_API || SPREADSHEET_API === "SUA_URL_DO_APPS_SCRIPT_AQUI") {
-                if(user === "admin" && pass === "123456") {
-                    localStorage.setItem('blood_admin_logged', 'true');
-                    document.getElementById('loginSection').style.display = 'none';
-                    document.getElementById('configSection').style.display = 'block';
-                    document.getElementById('chkShowAll').checked = mostrarTodosDoDashboard;
-                    renderTags();
-                } else {
-                    alert("Usuário ou senha incorretos!");
-                }
-                return;
-            }
-
             try {
                 const res = await fetch(`${SPREADSHEET_API}?action=login&user=${user}&pass=${pass}`);
                 const data = await res.json();
@@ -456,8 +514,7 @@
                     localStorage.setItem('blood_admin_logged', 'true');
                     document.getElementById('loginSection').style.display = 'none';
                     document.getElementById('configSection').style.display = 'block';
-                    document.getElementById('chkShowAll').checked = mostrarTodosDoDashboard;
-                    fetchMembersForAdmin();
+                    fetchDataForSite();
                 } else {
                     alert("Usuário ou senha incorretos!");
                 }
@@ -488,22 +545,17 @@
             if (val) {
                 const parts = val.split(',');
                 let addedAny = false;
-                
                 parts.forEach(part => {
                     const cleanNick = part.trim();
                     if (cleanNick && !guildMembersList.includes(cleanNick)) {
-                        if (guildMembersList.length >= MAX_MEMBERS) {
-                            alert(`O limite máximo do painel é de ${MAX_MEMBERS} membros.`);
-                            return;
-                        }
                         guildMembersList.push(cleanNick);
                         addedAny = true;
                     }
                 });
-                
                 if(addedAny) {
                     input.value = '';
                     renderTags();
+                    populateManualSelect();
                 }
             }
         }
@@ -511,45 +563,29 @@
         function removeNickTag(nick) {
             guildMembersList = guildMembersList.filter(item => item !== nick);
             renderTags();
+            populateManualSelect();
         }
 
         function renderTags() {
             const container = document.getElementById('tagsContainer');
             const counter = document.getElementById('memberCounter');
-            
-            counter.innerText = `${guildMembersList.length} / ${MAX_MEMBERS} Membros Monitorados`;
-            
+            counter.innerText = `${guildMembersList.length} Membros Monitorados`;
             container.innerHTML = guildMembersList.map(nick => `
                 <div class="tag">
                     <span>${nick}</span>
                     <span class="tag-remove" onclick="removeNickTag('${nick}')">×</span>
                 </div>
-            `).join('') || '<span style="color:#666; font-size:0.9rem;">Nenhum membro adicionado ainda.</span>';
-        }
-
-        async function fetchMembersForAdmin() {
-            try {
-                const res = await fetch(`${SPREADSHEET_API}?action=getPublicData`);
-                const data = await res.json();
-                if(data.members) {
-                    guildMembersList = data.members.slice(0, MAX_MEMBERS);
-                    renderTags();
-                }
-            } catch(e) {}
+            `).join('') || '<span style="color:#666; font-size:0.9rem;">Nenhum membro adicionado.</span>';
         }
 
         async function saveGuildNicks() {
-            if(!SPREADSHEET_API || SPREADSHEET_API === "SUA_URL_DO_APPS_SCRIPT_AQUI") {
-                alert("Nicks salvos localmente na sessão.");
-                return;
-            }
             const nicksStr = guildMembersList.join(',');
             try {
                 const res = await fetch(`${SPREADSHEET_API}?action=updateMembers&nicks=${encodeURIComponent(nicksStr)}`);
                 const data = await res.json();
                 if (data.success) {
-                    alert("Membros atualizados com sucesso na planilha!");
-                    fetchDashboardCombat();
+                    alert("Membros salvos com sucesso na planilha!");
+                    fetchDataForSite();
                 }
             } catch(e) {
                 alert("Erro ao salvar membros.");
@@ -557,18 +593,15 @@
         }
 
         async function downloadPDF() {
-            const dateVal = document.getElementById('reportDate').value;
-            if(!SPREADSHEET_API || SPREADSHEET_API === "SUA_URL_DO_APPS_SCRIPT_AQUI") {
-                alert("Configure a URL do Apps Script para gerar o relatório em PDF.");
-                return;
-            }
+            const startDate = document.getElementById('reportStartDate').value;
+            const endDate = document.getElementById('reportEndDate').value;
             try {
-                const res = await fetch(`${SPREADSHEET_API}?action=downloadPDF&date=${dateVal}`);
+                const res = await fetch(`${SPREADSHEET_API}?action=downloadPDF&startDate=${startDate}&endDate=${endDate}`);
                 const data = await res.json();
                 if (data.pdfBase64) {
                     const link = document.createElement('a');
                     link.href = 'data:application/pdf;base64,' + data.pdfBase64;
-                    link.download = `Relatorio_Hunt_${dateVal || 'Geral'}.pdf`;
+                    link.download = `Relatorio_Hunt_${startDate || 'Inicio'}_ate_${endDate || 'Hoje'}.pdf`;
                     link.click();
                 }
             } catch(e) {
@@ -594,139 +627,17 @@
             return `${day}/${month} • ${h1}:${m1} - ${h2}:${m2}`;
         }
 
-        function processCombatArray() {
-            let liveArray = [];
-            const guildLower = guildMembersList.map(n => n.toLowerCase());
-            for (let n in dailyScores) {
-                const isGuildMember = guildLower.includes(n.toLowerCase());
-                dailyScores[n].isGuild = isGuildMember;
-                if (mostrarTodosDoDashboard || isGuildMember) {
-                    liveArray.push(dailyScores[n]);
-                }
-            }
-            if (liveArray.length > 0) {
-                combatData = liveArray.sort((a, b) => parseFloat(b.blue.replace('k','')) - parseFloat(a.blue.replace('k','')));
-            } else {
-                combatData = [];
-            }
-        }
-
-        async function fetchDashboardCombat() {
-            const nowMs = new Date().getTime();
-            
-            try {
-                if (SPREADSHEET_API && SPREADSHEET_API !== "SUA_URL_DO_APPS_SCRIPT_AQUI" && (nowMs - lastGasSyncTime > 10000)) {
-                    fetch(`${SPREADSHEET_API}?action=getPublicData`)
-                        .then(res => res.json())
-                        .then(sheetJson => {
-                            if (sheetJson.members) { guildMembersList = sheetJson.members.slice(0, MAX_MEMBERS); }
-                            if (sheetJson.baseline) { globalBaseline = sheetJson.baseline; }
-                            
-                            if (sheetJson.dailyScores) {
-                                const guildLower = guildMembersList.map(n => n.toLowerCase());
-                                for (let n in sheetJson.dailyScores) {
-                                    if (!dailyScores[n]) dailyScores[n] = {};
-                                    dailyScores[n].player = n;
-                                    dailyScores[n].blue = sheetJson.dailyScores[n].blue;
-                                    dailyScores[n].red = sheetJson.dailyScores[n].red;
-                                    dailyScores[n].isGuild = guildLower.includes(n.toLowerCase());
-                                }
-                                localStorage.setItem('blood_daily_scores_' + dataDeHoje, JSON.stringify(dailyScores));
-                                processCombatArray();
-                                renderUI();
-                            }
-                        }).catch(e => {});
-                    lastGasSyncTime = nowMs;
-                }
-
-                const apiURL = 'https://dashboard.megamu.net/dashboard-s14/data1.4.php';
-                const cacheBuster = '?t=' + nowMs;
-                const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(apiURL + cacheBuster)}`;
-                
-                const response = await fetch(proxyUrl);
-                
-                if (response.ok) {
-                    const proxyData = await response.json();
-                    const rawJson = JSON.parse(proxyData.contents); 
-                    
-                    if (rawJson.events && rawJson.events.length > 0) {
-                        const eventData = JSON.parse(rawJson.events[0].data);
-                        const users = eventData.users;
-                        const guildLower = guildMembersList.map(n => n.toLowerCase());
-
-                        for (let n in dailyScores) {
-                            if (dailyScores[n]) dailyScores[n].isOnline = false;
-                        }
-
-                        for (let nick in users) {
-                            let currentBlue = users[nick][0];
-                            let currentRed = users[nick][1];
-
-                            if (!globalBaseline[nick]) {
-                                globalBaseline[nick] = { blue: currentBlue, red: currentRed };
-                                if (SPREADSHEET_API && SPREADSHEET_API !== "SUA_URL_DO_APPS_SCRIPT_AQUI") {
-                                    fetch(`${SPREADSHEET_API}?action=setBaseline&nick=${encodeURIComponent(nick)}&blue=${currentBlue}&red=${currentRed}`).catch(e => {});
-                                }
-                            }
-
-                            const isNaLista = guildLower.includes(nick.toLowerCase());
-                            
-                            if (mostrarTodosDoDashboard || isNaLista) {
-                                const baselineBlue = globalBaseline[nick].blue;
-                                const baselineRed = globalBaseline[nick].red;
-
-                                const deltaBlue = currentBlue - baselineBlue;
-                                const deltaRed = currentRed - baselineRed;
-
-                                const displayBlue = (deltaBlue / 1000).toFixed(1);
-                                const displayRed = (deltaRed / 1000).toFixed(1);
-                                
-                                if (!dailyScores[nick]) dailyScores[nick] = {};
-                                dailyScores[nick].player = nick;
-                                dailyScores[nick].blue = displayBlue + "k";
-                                dailyScores[nick].red = deltaRed > 0 ? "-" + displayRed + "k" : "0.0k";
-                                dailyScores[nick].isGuild = isNaLista;
-                                dailyScores[nick].isOnline = true;
-
-                                if (deltaBlue > 0 || deltaRed > 0) {
-                                    const syncKey = `${deltaBlue}_${deltaRed}`;
-                                    if (lastSyncState[nick] !== syncKey) {
-                                        lastSyncState[nick] = syncKey; 
-                                        if (SPREADSHEET_API && SPREADSHEET_API !== "SUA_URL_DO_APPS_SCRIPT_AQUI") {
-                                            fetch(`${SPREADSHEET_API}?action=syncDelta&nick=${encodeURIComponent(nick)}&blue=${displayBlue}&red=${displayRed}`).catch(e => {});
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
-                        localStorage.setItem('blood_daily_scores_' + dataDeHoje, JSON.stringify(dailyScores));
-                        processCombatArray();
-                    }
-                }
-            } catch(e) {
-                console.error("Erro na leitura da API:", e);
-            }
-            
-            renderUI();
-        }
-
         async function fetchBossLogs() {
             try {
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 8000);
                 const response = await fetch('/api/bosses', { signal: controller.signal });
                 clearTimeout(timeoutId);
-                
-                if (!response.ok) throw new Error("Erro no servidor");
-
+                if (!response.ok) throw new Error("Erro");
                 const htmlText = await response.text();
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(htmlText, 'text/html');
                 const rows = doc.querySelectorAll('table tbody tr');
-                
-                if (rows.length === 0) throw new Error("Tabela não encontrada");
-
                 const latestKills = {};
                 rows.forEach(row => {
                     const columns = row.querySelectorAll('td');
@@ -735,23 +646,17 @@
                         const bossName = columns[1].textContent.trim();
                         const killedBy = columns[2].textContent.trim();
                         const server = columns[3].textContent.trim();
-
                         if (respawnRules[bossName]) {
                             const uniqueKey = bossName + "_" + server;
                             if (!latestKills[uniqueKey]) {
                                 const killDate = parseBrazilianDate(dateStr);
                                 const respawnMs = respawnRules[bossName] * 60 * 60 * 1000;
                                 const spawnDate = new Date(killDate.getTime() + respawnMs);
-                                
-                                latestKills[uniqueKey] = {
-                                    boss: bossName, server: server,
-                                    lastKiller: killedBy, killDate: killDate, spawnDate: spawnDate
-                                };
+                                latestKills[uniqueKey] = { boss: bossName, server: server, lastKiller: killedBy, killDate: killDate, spawnDate: spawnDate };
                             }
                         }
                     }
                 });
-
                 allData = Object.values(latestKills).sort((a, b) => a.spawnDate - b.spawnDate);
                 renderUI();
             } catch (error) {}
@@ -775,33 +680,66 @@
 
         function setupNavigation() {
             const nav = document.getElementById('nav-container');
-            const tabs = ["Visão Geral", ...Object.keys(respawnRules), "Roubo de Hunt"];
+            const tabs = ["Roubo de Hunt", "Dashboard do Jogo", "Visão Geral", ...Object.keys(respawnRules)];
             nav.innerHTML = tabs.map(tab => `<button class="nav-btn ${tab === currentTab ? 'active' : ''}" onclick="changeTab('${tab}')">${tab}</button>`).join('');
         }
 
         window.changeTab = function(tabName) {
-            currentTab = tabName; setupNavigation(); renderUI();
+            currentTab = tabName; 
+            setupNavigation(); 
+            renderUI();
+            if(currentTab === 'Dashboard do Jogo') {
+                fetchDashboardHuntAPI();
+            }
         }
 
         function renderUI() {
             const main = document.getElementById('main-content');
             const now = new Date().getTime();
             const timeStr = new Date().toLocaleTimeString('pt-BR', { hour12: false });
-            
             const headerHtml = `<div class="section-title"><span>${currentTab.toUpperCase()}</span><span class="last-update">Atualizado às ${timeStr}</span></div>`;
 
-            if (currentTab === 'Visão Geral') {
+            if (currentTab === 'Roubo de Hunt') {
+                let htmlRows = '';
+                let rankCounter = 1;
+                combatData.forEach(c => {
+                    htmlRows += `
+                        <div class="combat-row">
+                            <div class="combat-rank">${rankCounter++}º</div>
+                            <div class="combat-player">${c.player}</div>
+                            <div class="combat-stats">
+                                <span class="stat-blue">${c.blue || "0.0k"}</span>
+                                <span class="stat-red">${c.red || "0.0k"}</span>
+                            </div>
+                        </div>
+                    `;
+                });
+                main.innerHTML = headerHtml + `<div class="combat-table">${htmlRows || '<p style="text-align:center; color:#777;">Nenhum membro cadastrado ou pontuado hoje.</p>'}</div>`;
+            }
+            else if (currentTab === 'Dashboard do Jogo') {
+                let htmlRows = '';
+                let rankCounter = 1;
+                dashboardHuntData.forEach(c => {
+                    htmlRows += `
+                        <div class="combat-row">
+                            <div class="combat-rank">${rankCounter++}º</div>
+                            <div class="combat-player">${c.player}</div>
+                            <div class="combat-stats">
+                                <span class="stat-blue">${c.blue}</span>
+                                <span class="stat-red">${c.red}</span>
+                            </div>
+                        </div>
+                    `;
+                });
+                main.innerHTML = headerHtml + `<div class="combat-table">${htmlRows || '<p style="text-align:center; color:#777;">Carregando dados do servidor...</p>'}</div>`;
+            }
+            else if (currentTab === 'Visão Geral') {
                 const sortedBosses = [...allData].sort((a, b) => a.spawnDate.getTime() - b.spawnDate.getTime());
                 const topBosses = sortedBosses.slice(0, 12);
-                
                 const cardsHtml = topBosses.map(data => {
                     const diff = data.spawnDate.getTime() - now;
                     const timeData = formatTimeState(diff);
-                    let subTextHtml = "";
-                    if (timeData.state === 'live') { subTextHtml = "Organize a Party e procure no mapa!"; }
-                    else if (timeData.state === 'unknown') { subTextHtml = `Última kill: ${formatSpawnWindow(data.killDate).split('•')[0]}`; }
-                    else { subTextHtml = `Prev: <span class="prediction">${formatSpawnWindow(data.spawnDate)}</span>`; }
-
+                    let subTextHtml = timeData.state === 'live' ? "Organize a Party e procure no mapa!" : (timeData.state === 'unknown' ? `Última kill: ${formatSpawnWindow(data.killDate).split('•')[0]}` : `Prev: <span class="prediction">${formatSpawnWindow(data.spawnDate)}</span>`);
                     return `
                         <div class="compact-card ${timeData.state === 'live' ? 'live' : ''} ${timeData.state === 'unknown' ? 'unknown' : ''}">
                             <div class="compact-header"><span class="boss-name">${data.boss}</span><span class="server-tag">${data.server}</span></div>
@@ -812,118 +750,34 @@
                 }).join('');
                 main.innerHTML = headerHtml + `<div class="overview-grid">${cardsHtml}</div>`;
             } 
-            else if (currentTab === 'Roubo de Hunt') {
-                if (guildMembersList.length === 0 && !mostrarTodosDoDashboard) {
-                    main.innerHTML = headerHtml + '<p style="color:#777; text-align:center; padding: 20px;">Nenhum membro da guilda cadastrado. Limite máximo: 30 membros.</p>';
-                    return;
-                }
-
-                let onlineHtml = '';
-                let offlineHtml = '';
-                let rankCounterOnline = 1;
-                let rankCounterOffline = 1;
-
-                // SEPARAÇÃO: Apenas quem está ONLINE fica em cima
-                let onlineList = combatData.filter(c => c.isOnline);
-                // Quem está OFFLINE (mas tem registro ou faz parte da guilda) fica embaixo
-                let offlineList = combatData.filter(c => !c.isOnline);
-
-                // Adiciona membros cadastrados que ainda não pontualiaram na lista offline
-                const processedNicks = new Set(combatData.map(c => c.player.toLowerCase()));
-                guildMembersList.forEach(nick => {
-                    if (!processedNicks.has(nick.toLowerCase())) {
-                        offlineList.push({
-                            player: nick,
-                            blue: "0.0k",
-                            red: "0.0k",
-                            isGuild: true,
-                            isOnline: false
-                        });
-                    }
-                });
-
-                // 1. MONTAGEM DO GRUPO ONLINE (EM CIMA)
-                onlineList.forEach(c => {
-                    const tagGlobal = !c.isGuild ? '<span style="font-size:0.75rem; color:#777; margin-left: 8px; font-weight: normal;">(Global)</span>' : '';
-                    onlineHtml += `
-                        <div class="combat-row">
-                            <div class="combat-rank">${rankCounterOnline++}º</div>
-                            <div class="combat-player"><span style="color:#00e676; font-size:10px; margin-right:6px;" title="Online no Jogo">●</span>${c.player} ${tagGlobal}</div>
-                            <div class="combat-stats">
-                                <span class="stat-blue">${c.blue || "0.0k"}</span>
-                                <span class="stat-red">${c.red || "0.0k"}</span>
-                            </div>
-                        </div>
-                    `;
-                });
-
-                // 2. MONTAGEM DO GRUPO OFFLINE (EMBAIXO)
-                offlineList.forEach(c => {
-                    const tagGlobal = !c.isGuild ? '<span style="font-size:0.75rem; color:#777; margin-left: 8px; font-weight: normal;">(Global)</span>' : '';
-                    offlineHtml += `
-                        <div class="combat-row" style="opacity: 0.55; border-left-color: var(--unknown-grey);">
-                            <div class="combat-rank" style="color: var(--unknown-grey);">${rankCounterOffline++}º</div>
-                            <div class="combat-player"><span style="color:#e57373; font-size:10px; margin-right:6px;" title="Offline">●</span>${c.player} ${tagGlobal}</div>
-                            <div class="combat-stats">
-                                <span class="stat-blue">${c.blue || "0.0k"}</span>
-                                <span class="stat-red">${c.red || "0.0k"}</span>
-                            </div>
-                        </div>
-                    `;
-                });
-
-                let finalTableHtml = '';
-                if (onlineHtml !== '') {
-                    finalTableHtml += `<div class="section-separator" style="color: var(--live-green);">Membros Online no Servidor</div>` + onlineHtml;
-                }
-                if (offlineHtml !== '') {
-                    finalTableHtml += `<div class="section-separator" style="color: var(--text-muted); margin-top: 25px;">Membros Offline / Ociosos</div>` + offlineHtml;
-                }
-
-                main.innerHTML = headerHtml + `<div class="combat-table">${finalTableHtml}</div>`;
-            }
             else {
                 const bossData = allData.filter(d => d.boss === currentTab);
                 bossData.sort((a, b) => a.spawnDate.getTime() - b.spawnDate.getTime());
-
                 let rowsHtml = '';
                 bossData.forEach(data => {
                     const diff = data.spawnDate.getTime() - now;
                     const timeData = formatTimeState(diff);
-                    let dateColHtml = "";
-                    if (timeData.state === 'live') { dateColHtml = "NASCENDO / VIVO"; }
-                    else if (timeData.state === 'unknown') { dateColHtml = "Aguardando novo padrão"; }
-                    else { dateColHtml = formatSpawnWindow(data.spawnDate); }
-
-                    let color = "var(--text-main)";
-                    if (timeData.state === 'live') color = "var(--blood-red)";
-                    if (timeData.state === 'unknown') color = "var(--unknown-grey)";
-
+                    let dateColHtml = timeData.state === 'live' ? "NASCENDO / VIVO" : (timeData.state === 'unknown' ? "Aguardando novo padrão" : formatSpawnWindow(data.spawnDate));
+                    let color = timeData.state === 'live' ? "var(--blood-red)" : (timeData.state === 'unknown' ? "var(--unknown-grey)" : "var(--text-main)");
                     rowsHtml += `
                         <div class="server-row ${timeData.state === 'live' ? 'live-row' : ''} ${timeData.state === 'unknown' ? 'unknown-row' : ''}">
                             <div class="col-server">${data.server}</div>
                             <div class="col-killer">Última Kill: <span>${data.lastKiller}</span></div>
-                            <div class="col-date" style="color: ${timeData.state === 'unknown' ? 'var(--unknown-grey)' : ''}">${dateColHtml}</div>
+                            <div class="col-date">${dateColHtml}</div>
                             <div class="col-timer" style="color: ${color}">${timeData.text}</div>
                         </div>
                     `;
                 });
-
-                if (rowsHtml === '') {
-                    rowsHtml = `<div class="server-row empty-row"><div class="col-server">--</div><div class="col-killer">Nenhum log no sistema</div><div class="col-date">--/--</div><div class="col-timer" style="color: var(--text-muted)">--:--:--</div></div>`;
-                }
-
-                main.innerHTML = headerHtml + `<div class="server-list">${rowsHtml}</div>`;
+                main.innerHTML = headerHtml + `<div class="server-list">${rowsHtml || '<div class="server-row empty-row"><div class="col-server">--</div><div class="col-killer">Nenhum log</div><div class="col-date">--/--</div><div class="col-timer">--:--:--</div></div>'}</div>`;
             }
         }
 
         setupNavigation(); 
         fetchBossLogs();
-        fetchDashboardCombat();
+        fetchDataForSite();
 
         setInterval(fetchBossLogs, 10 * 1000);
-        setInterval(fetchDashboardCombat, 5 * 1000);
-        setInterval(renderUI, 1000);
+        setInterval(fetchDataForSite, 10 * 1000);
     </script>
 </body>
 </html>
