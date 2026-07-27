@@ -224,8 +224,8 @@
         .server-row.live-row { border-color: rgba(218,0,0,0.5); border-left: 4px solid var(--blood-red); background-color: rgba(218,0,0,0.05); }
         .server-row.unknown-row { opacity: 0.7; border-left: 4px solid var(--unknown-grey); }
 
-        .col-server { width: 10%; font-weight: 800; font-size: 1.3rem; color: #fff; }
-        .col-killer { width: 35%; font-size: 0.95rem; color: var(--text-muted); }
+        .col-server { width: 15%; font-weight: 800; font-size: 1.3rem; color: #fff; }
+        .col-killer { width: 30%; font-size: 0.95rem; color: var(--text-muted); }
         .col-killer span { color: var(--text-main); font-weight: 600; }
         .col-date { width: 30%; font-size: 0.9rem; color: #4AA3DF; text-align: center; font-weight: 600; }
         .col-timer { width: 25%; font-family: 'Teko', sans-serif; font-size: 2rem; text-align: right; font-style: italic; }
@@ -345,7 +345,7 @@
             if (event.ctrlKey && (event.key === 'U' || event.key === 'u')) event.preventDefault();
         });
 
-        const SPREADSHEET_API = "https://script.google.com/macros/s/AKfycbycyZcm0yh9lj8a3BLrJfi4kpnmexEryLgE8UCunVmYhUcxtTVuCJLxd11DGE22SJOGKw/exec"; 
+        const SPREADSHEET_API = "https://script.google.com/macros/s/AKfycbzErAVz8lONWp3Mmz0wD_2FgOOPBehI7-WvTjqkGXGvDjz_Way-t8UPGCW5RofOVpI6ag/exec"; 
         let guildMembersList = [];
         const MAX_MEMBERS = 30;
 
@@ -373,7 +373,7 @@
         let mostrarTodosDoDashboard = localStorage.getItem('blood_show_all') === 'true';
 
         window.addEventListener('DOMContentLoaded', () => {
-            if (localStorage.getItem('blood_admin_logged') === 'true') {
+            if (localStorage.getItem('blood_admin_logged'] === 'true') {
                 document.getElementById('loginSection').style.display = 'none';
                 document.getElementById('configSection').style.display = 'block';
                 document.getElementById('chkShowAll').checked = mostrarTodosDoDashboard;
@@ -610,7 +610,7 @@
             const nowMs = new Date().getTime();
             
             try {
-                if (SPREADSHEET_API && SPREADSHEET_API !== "SUA_URL_DO_APPS_SCRIPT_AQUI" && (nowMs - lastGasSyncTime > 15000)) {
+                if (SPREADSHEET_API && SPREADSHEET_API !== "SUA_URL_DO_APPS_SCRIPT_AQUI" && (nowMs - lastGasSyncTime > 10000)) {
                     fetch(`${SPREADSHEET_API}?action=getPublicData`)
                         .then(res => res.json())
                         .then(sheetJson => {
@@ -747,6 +747,7 @@
                     }
                 });
 
+                // ORDENAÇÃO POR RESPAWN (Do que vai nascer mais cedo para o que vai demorar mais)
                 allData = Object.values(latestKills).sort((a, b) => a.spawnDate - b.spawnDate);
                 renderUI();
             } catch (error) {}
@@ -786,7 +787,10 @@
             const headerHtml = `<div class="section-title"><span>${currentTab.toUpperCase()}</span><span class="last-update">Atualizado às ${timeStr}</span></div>`;
 
             if (currentTab === 'Visão Geral') {
-                const topBosses = allData.slice(0, 12);
+                // ORDENADO POR RESPAWN NA VISÃO GERAL
+                const sortedBosses = [...allData].sort((a, b) => a.spawnDate.getTime() - b.spawnDate.getTime());
+                const topBosses = sortedBosses.slice(0, 12);
+                
                 const cardsHtml = topBosses.map(data => {
                     const diff = data.spawnDate.getTime() - now;
                     const timeData = formatTimeState(diff);
@@ -853,39 +857,37 @@
                 main.innerHTML = headerHtml + `<div class="combat-table">${onlineHtml + offlineHtml}</div>`;
             }
             else {
+                // ABAS DOS BOSSES INDIVIDUAIS: ORDENADAS POR RESPAWN (O que vai nascer mais cedo aparece primeiro)
                 const bossData = allData.filter(d => d.boss === currentTab);
-                const serverMap = {};
-                bossData.forEach(d => serverMap[d.server.toUpperCase()] = d);
+                bossData.sort((a, b) => a.spawnDate.getTime() - b.spawnDate.getTime());
 
                 let rowsHtml = '';
-                for (let i = 1; i <= totalServers; i++) {
-                    const svName = `SV${i}`;
-                    const data = serverMap[svName];
+                bossData.forEach(data => {
+                    const diff = data.spawnDate.getTime() - now;
+                    const timeData = formatTimeState(diff);
+                    let dateColHtml = "";
+                    if (timeData.state === 'live') { dateColHtml = "NASCENDO / VIVO"; }
+                    else if (timeData.state === 'unknown') { dateColHtml = "Aguardando novo padrão"; }
+                    else { dateColHtml = formatSpawnWindow(data.spawnDate); }
 
-                    if (data) {
-                        const diff = data.spawnDate.getTime() - now;
-                        const timeData = formatTimeState(diff);
-                        let dateColHtml = "";
-                        if (timeData.state === 'live') { dateColHtml = "NASCENDO / VIVO"; }
-                        else if (timeData.state === 'unknown') { dateColHtml = "Aguardando novo padrão"; }
-                        else { dateColHtml = formatSpawnWindow(data.spawnDate); }
+                    let color = "var(--text-main)";
+                    if (timeData.state === 'live') color = "var(--blood-red)";
+                    if (timeData.state === 'unknown') color = "var(--unknown-grey)";
 
-                        let color = "var(--text-main)";
-                        if (timeData.state === 'live') color = "var(--blood-red)";
-                        if (timeData.state === 'unknown') color = "var(--unknown-grey)";
+                    rowsHtml += `
+                        <div class="server-row ${timeData.state === 'live' ? 'live-row' : ''} ${timeData.state === 'unknown' ? 'unknown-row' : ''}">
+                            <div class="col-server">${data.server}</div>
+                            <div class="col-killer">Última Kill: <span>${data.lastKiller}</span></div>
+                            <div class="col-date" style="color: ${timeData.state === 'unknown' ? 'var(--unknown-grey)' : ''}">${dateColHtml}</div>
+                            <div class="col-timer" style="color: ${color}">${timeData.text}</div>
+                        </div>
+                    `;
+                });
 
-                        rowsHtml += `
-                            <div class="server-row ${timeData.state === 'live' ? 'live-row' : ''} ${timeData.state === 'unknown' ? 'unknown-row' : ''}">
-                                <div class="col-server">${data.server}</div>
-                                <div class="col-killer">Última Kill: <span>${data.lastKiller}</span></div>
-                                <div class="col-date" style="color: ${timeData.state === 'unknown' ? 'var(--unknown-grey)' : ''}">${dateColHtml}</div>
-                                <div class="col-timer" style="color: ${color}">${timeData.text}</div>
-                            </div>
-                        `;
-                    } else {
-                        rowsHtml += `<div class="server-row empty-row"><div class="col-server">Sv${i}</div><div class="col-killer">Nenhum log no sistema</div><div class="col-date">--/--</div><div class="col-timer" style="color: var(--text-muted)">--:--:--</div></div>`;
-                    }
+                if (rowsHtml === '') {
+                    rowsHtml = `<div class="server-row empty-row"><div class="col-server">--</div><div class="col-killer">Nenhum log no sistema</div><div class="col-date">--/--</div><div class="col-timer" style="color: var(--text-muted)">--:--:--</div></div>`;
                 }
+
                 main.innerHTML = headerHtml + `<div class="server-list">${rowsHtml}</div>`;
             }
         }
