@@ -345,7 +345,7 @@
             if (event.ctrlKey && (event.key === 'U' || event.key === 'u')) event.preventDefault();
         });
 
-        const SPREADSHEET_API = "https://script.google.com/macros/s/AKfycby62BxpxmKA4j9woWvvLJSMB7gQAcnVUYFLlzIZlx8l5kJJEVn0fRW7cF083YT37KRGAw/exec"; 
+        const SPREADSHEET_API = "https://script.google.com/macros/s/AKfycbyj56_mZhYi0jH_oIzqGYZt1DaWVw99C4phJXEf4NCIWwnrKnY29gLPQ9WZSzgYN8R9uA/exec"; 
         let guildMembersList = [];
         const MAX_MEMBERS = 30;
 
@@ -365,6 +365,8 @@
         let currentTab = 'Visão Geral';
 
         const dataDeHoje = new Date().toLocaleDateString('pt-BR');
+        
+        // CARREGAMENTO INSTANTÂNEO (Usa a memória local imediatamente para não travar a tela)
         let dailyScores = JSON.parse(localStorage.getItem('blood_daily_scores_' + dataDeHoje)) || {};
         let globalBaseline = {}; 
         let lastGasSyncTime = 0; 
@@ -378,6 +380,8 @@
                 document.getElementById('chkShowAll').checked = mostrarTodosDoDashboard;
                 fetchMembersForAdmin();
             }
+            // Desenha a tela IMEDIATAMENTE com o que estiver na memória local
+            renderUI();
         });
 
         function toggleAdminPanel() {
@@ -564,35 +568,33 @@
             const nowMs = new Date().getTime();
             
             try {
+                // Sincroniza com a planilha em segundo plano a cada 30 segundos sem travar a tela
                 if (SPREADSHEET_API && SPREADSHEET_API !== "SUA_URL_DO_APPS_SCRIPT_AQUI" && (nowMs - lastGasSyncTime > 30000)) {
-                    const sheetRes = await fetch(`${SPREADSHEET_API}?action=getPublicData`);
-                    const sheetJson = await sheetRes.json();
-                    
-                    if (sheetJson.members) { guildMembersList = sheetJson.members.slice(0, MAX_MEMBERS); }
-                    if (sheetJson.baseline) { globalBaseline = sheetJson.baseline; }
-                    
-                    if (sheetJson.dailyScores) {
-                        const guildLower = guildMembersList.map(n => n.toLowerCase());
-                        for (let n in sheetJson.dailyScores) {
-                            // CORREÇÃO: Garante que lê os pontos da planilha mesmo se vierem sem a letra 'k'
-                            let rawBlue = String(sheetJson.dailyScores[n].blue || "0.0");
-                            let rawRed = String(sheetJson.dailyScores[n].red || "0.0");
+                    fetch(`${SPREADSHEET_API}?action=getPublicData`)
+                        .then(res => res.json())
+                        .then(sheetJson => {
+                            if (sheetJson.members) { guildMembersList = sheetJson.members.slice(0, MAX_MEMBERS); }
+                            if (sheetJson.baseline) { globalBaseline = sheetJson.baseline; }
                             
-                            let formattedBlue = rawBlue.includes('k') ? rawBlue : rawBlue + "k";
-                            let formattedRed = rawRed === "0.0" || rawRed === "0.0k" ? "0.0k" : (rawRed.includes('k') ? "-" + rawRed : "-" + rawRed + "k");
-
-                            dailyScores[n] = {
-                                player: n,
-                                blue: formattedBlue,
-                                red: formattedRed,
-                                isGuild: guildLower.includes(n.toLowerCase()),
-                                isOnline: false
-                            };
-                        }
-                    }
+                            // Puxa o consolidado direto da aba Registros da planilha
+                            if (sheetJson.dailyScores) {
+                                const guildLower = guildMembersList.map(n => n.toLowerCase());
+                                for (let n in sheetJson.dailyScores) {
+                                    dailyScores[n] = {
+                                        player: n,
+                                        blue: sheetJson.dailyScores[n].blue,
+                                        red: sheetJson.dailyScores[n].red,
+                                        isGuild: guildLower.includes(n.toLowerCase()),
+                                        isOnline: false
+                                    };
+                                }
+                                localStorage.setItem('blood_daily_scores_' + dataDeHoje, JSON.stringify(dailyScores));
+                            }
+                        }).catch(e => {});
                     lastGasSyncTime = nowMs;
                 }
 
+                // LÊ O MEGA MU EM SEGUNDO PLANO
                 const apiURL = 'https://dashboard.megamu.net/dashboard-s14/data1.4.php';
                 const cacheBuster = '?t=' + nowMs;
                 const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(apiURL + cacheBuster)}`;
