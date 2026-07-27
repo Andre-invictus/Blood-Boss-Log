@@ -1,9 +1,7 @@
-// Arquivo: api/bosses.js
-
 export default async function handler(req, res) {
     try {
-        // Conecta diretamente ao novo Dashboard Oficial do Mega MU
-        const response = await fetch('https://dashboard.megamu.net/', {
+        // Retornamos para a rota que entrega a tabela HTML crua e pública
+        const response = await fetch('https://megamu.net/boss-log', {
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
                 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
@@ -17,7 +15,6 @@ export default async function handler(req, res) {
 
         const html = await response.text();
         
-        // Envia o HTML do Dashboard para o seu painel processar
         res.setHeader('Content-Type', 'text/html; charset=utf-8');
         res.status(200).send(html);
         
