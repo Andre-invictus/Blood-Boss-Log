@@ -345,7 +345,7 @@
             if (event.ctrlKey && (event.key === 'U' || event.key === 'u')) event.preventDefault();
         });
 
-        const SPREADSHEET_API = "https://script.google.com/macros/s/AKfycbwfdGawNSh2mkGqathisGmPks9trlKGLUWdCpNRG868lj7JSbE8x7wlEeskpNms0BIZGA/exec"; 
+        const SPREADSHEET_API = "https://script.google.com/macros/s/AKfycbycyZcm0yh9lj8a3BLrJfi4kpnmexEryLgE8UCunVmYhUcxtTVuCJLxd11DGE22SJOGKw/exec"; 
         let guildMembersList = [];
         const MAX_MEMBERS = 30;
 
@@ -379,7 +379,6 @@
                 document.getElementById('chkShowAll').checked = mostrarTodosDoDashboard;
                 fetchMembersForAdmin();
             }
-            // Força a leitura imediata da planilha ao abrir o site para puxar o Costureiro e o klopp já somados
             fetchSheetScoresOnStart();
             renderUI();
         });
@@ -472,7 +471,7 @@
         }
 
         function handleNickKey(e) {
-            if (event.key === 'Enter') {
+            if (e.key === 'Enter') {
                 e.preventDefault();
                 addNickTag();
             }
@@ -611,7 +610,6 @@
             const nowMs = new Date().getTime();
             
             try {
-                // Sincroniza com a planilha a cada 15 segundos em segundo plano
                 if (SPREADSHEET_API && SPREADSHEET_API !== "SUA_URL_DO_APPS_SCRIPT_AQUI" && (nowMs - lastGasSyncTime > 15000)) {
                     fetch(`${SPREADSHEET_API}?action=getPublicData`)
                         .then(res => res.json())
@@ -636,7 +634,6 @@
                     lastGasSyncTime = nowMs;
                 }
 
-                // LÊ O MEGA MU AO VIVO (PROXY ALLORIGINS)
                 const apiURL = 'https://dashboard.megamu.net/dashboard-s14/data1.4.php';
                 const cacheBuster = '?t=' + nowMs;
                 const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(apiURL + cacheBuster)}`;
@@ -847,7 +844,7 @@
                                 <div class="combat-player" style="color: #999;">${nick}</div>
                                 <div class="status-offline">
                                     0.0k (Aguardando hunt)
-                                    </div>
+                                </div>
                             </div>
                         `;
                     }
