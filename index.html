@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blood Esports | Boss Radar</title>
+    <title>Blood Esports | Boss & Combat Radar</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,600;0,800;1,800&family=Teko:wght@500;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -15,6 +15,7 @@
             --text-main: #f5f5f5;
             --text-muted: #888888;
             --live-green: #00e676;
+            --combat-blue: #00b0ff;
             --unknown-grey: #444444;
             --border-color: #222222;
         }
@@ -31,10 +32,9 @@
             min-height: 100vh;
         }
 
-        /* HEADER & BRANDING APRIMORADOS */
+        /* HEADER & BRANDING */
         header {
             width: 100%;
-            /* Simula um fundo mais texturizado/radial parecido com o site oficial */
             background: radial-gradient(circle at top center, #1a0000 0%, var(--bg-dark) 80%);
             border-bottom: 2px solid var(--blood-red);
             padding: 30px 0 20px 0;
@@ -45,19 +45,16 @@
             box-shadow: 0 4px 20px rgba(218, 0, 0, 0.15);
         }
 
-        /* Logo Grande e Responsiva */
         .logo-container img { 
-            height: 160px; /* Bem maior no Desktop */
+            height: 160px; 
             object-fit: contain; 
             margin-bottom: 20px;
-            filter: drop-shadow(0 0 15px rgba(218, 0, 0, 0.3)); /* Brilho vermelho suave */
+            filter: drop-shadow(0 0 15px rgba(218, 0, 0, 0.3));
             transition: all 0.3s ease;
         }
 
         @media (max-width: 768px) {
-            .logo-container img {
-                height: 90px; /* Tamanho ajustado para não quebrar no celular */
-            }
+            .logo-container img { height: 90px; }
         }
 
         .status-badge {
@@ -88,27 +85,21 @@
             background-color: currentColor; box-shadow: 0 0 8px currentColor;
         }
 
-        /* NAVEGAÇÃO / ABAS - ESTILO ESPORTS */
+        /* NAVEGAÇÃO / ABAS */
         .nav-container {
             width: 100%; max-width: 1200px; margin: 30px auto 20px auto;
-            display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; padding: 0 20px;
+            display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; padding: 0 20px;
         }
 
         .nav-btn {
             background-color: var(--bg-panel); color: var(--text-muted);
-            border: 1px solid var(--border-color); padding: 12px 24px;
-            border-radius: 4px; font-family: 'Teko', sans-serif; font-size: 1.4rem;
+            border: 1px solid var(--border-color); padding: 10px 20px;
+            border-radius: 4px; font-family: 'Teko', sans-serif; font-size: 1.3rem;
             letter-spacing: 1.5px; cursor: pointer; transition: all 0.2s ease; 
-            text-transform: uppercase;
-            font-style: italic; /* Inclinado igual ao menu oficial */
+            text-transform: uppercase; font-style: italic;
         }
 
-        .nav-btn:hover { 
-            color: var(--text-main); 
-            border-color: var(--blood-red); 
-            background-color: #1a0000;
-        }
-
+        .nav-btn:hover { color: var(--text-main); border-color: var(--blood-red); background-color: #1a0000; }
         .nav-btn.active {
             background-color: var(--blood-red); color: #fff;
             border-color: var(--blood-red); box-shadow: 0 4px 15px rgba(218, 0, 0, 0.4);
@@ -135,15 +126,12 @@
             position: relative; overflow: hidden; border-left: 4px solid var(--border-color);
             transition: transform 0.2s ease;
         }
-        
         .compact-card:hover { transform: translateY(-2px); border-color: #333; }
-
         .compact-card.live {
             border-left-color: var(--blood-red);
             background: linear-gradient(90deg, rgba(218,0,0,0.15) 0%, rgba(20,20,20,1) 100%);
             border-color: rgba(218,0,0,0.3);
         }
-
         .compact-card.unknown { border-left-color: var(--unknown-grey); opacity: 0.7; }
 
         .compact-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
@@ -157,16 +145,14 @@
         .date-sub { font-size: 0.85rem; color: var(--text-muted); }
         .date-sub.prediction { color: #4AA3DF; font-weight: 600; }
 
-        /* LISTA DETALHADA */
+        /* LISTA DETALHADA DE BOSSES */
         .server-list { display: flex; flex-direction: column; gap: 10px; }
-
         .server-row {
             display: flex; justify-content: space-between; align-items: center;
             background-color: var(--bg-card); border: 1px solid var(--border-color);
             padding: 15px 25px; border-radius: 6px; border-left: 4px solid #333;
             transition: transform 0.2s ease;
         }
-
         .server-row:hover { transform: translateX(5px); border-color: #333; }
         .server-row.live-row { border-color: rgba(218,0,0,0.5); border-left: 4px solid var(--blood-red); background-color: rgba(218,0,0,0.05); }
         .server-row.unknown-row { opacity: 0.7; border-left: 4px solid var(--unknown-grey); }
@@ -176,46 +162,38 @@
         .col-killer span { color: var(--text-main); font-weight: 600; }
         .col-date { width: 30%; font-size: 0.9rem; color: #4AA3DF; text-align: center; font-weight: 600; }
         .col-timer { width: 25%; font-family: 'Teko', sans-serif; font-size: 2rem; text-align: right; font-style: italic; }
-        
         .empty-row { opacity: 0.4; background-color: transparent; border-style: dashed; }
-        .empty-row:hover { transform: none; border-color: var(--border-color); }
 
-        /* FOOTER PROFISSIONAL LIMPO */
+        /* ESTILO DA TABELA ROUBO DE HUNT */
+        .combat-table { display: flex; flex-direction: column; gap: 8px; }
+        .combat-row {
+            display: flex; justify-content: space-between; align-items: center;
+            background-color: var(--bg-card); border: 1px solid var(--border-color);
+            padding: 15px 25px; border-radius: 6px;
+        }
+        .combat-row:hover { border-color: #333; background-color: #181818; }
+        .combat-rank { width: 10%; font-family: 'Teko', sans-serif; font-size: 1.8rem; color: var(--blood-red); font-style: italic; }
+        .combat-player { width: 40%; font-weight: 800; font-size: 1.1rem; color: #fff; }
+        .combat-stats { width: 50%; display: flex; justify-content: flex-end; gap: 30px; font-family: 'Teko', sans-serif; font-size: 1.8rem; font-style: italic; }
+        .stat-blue { color: var(--combat-blue); }
+        .stat-red { color: var(--blood-red); }
+
+        /* FOOTER */
         footer {
-            margin-top: auto;
-            padding: 30px 20px;
-            width: 100%;
+            margin-top: auto; padding: 30px 20px; width: 100%;
             background: linear-gradient(0deg, #050505 0%, #0a0a0a 100%);
-            border-top: 1px solid #1a1a1a;
-            display: flex;
-            justify-content: center;
+            border-top: 1px solid #1a1a1a; display: flex; justify-content: center;
         }
-
         .support-banner {
-            background-color: var(--bg-panel);
-            border: 1px solid var(--border-color);
-            padding: 12px 30px;
-            border-radius: 4px; /* Mais quadrado, menos arredondado */
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            font-size: 0.95rem;
-            color: #999;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            text-transform: uppercase;
-            font-style: italic;
-            font-weight: 800;
+            background-color: var(--bg-panel); border: 1px solid var(--border-color);
+            padding: 12px 30px; border-radius: 4px; display: flex; align-items: center;
+            gap: 15px; font-size: 0.95rem; color: #999; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            text-transform: uppercase; font-style: italic; font-weight: 800;
         }
-
         .coupon-highlight {
-            color: #fff;
-            background-color: var(--blood-red);
-            padding: 6px 16px;
-            border-radius: 4px;
-            font-weight: 800;
-            letter-spacing: 1.5px;
-            font-size: 1.1rem;
-            box-shadow: 0 0 15px rgba(218,0,0,0.4);
+            color: #fff; background-color: var(--blood-red); padding: 6px 16px;
+            border-radius: 4px; font-weight: 800; letter-spacing: 1.5px;
+            font-size: 1.1rem; box-shadow: 0 0 15px rgba(218,0,0,0.4);
         }
 
         @keyframes pulse-text { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
@@ -256,6 +234,7 @@
 
         const totalServers = 19;
         let allData = [];
+        let combatData = [];
         let currentTab = 'Visão Geral';
 
         function parseBrazilianDate(dateString) {
@@ -264,19 +243,15 @@
             return new Date(); 
         }
 
-        // JANELA DE CAÇA RESTRITA (10 MINUTOS MAX)
         function formatSpawnWindow(dateObj) {
             if (isNaN(dateObj.getTime())) return "N/A";
             const day = String(dateObj.getDate()).padStart(2, '0');
             const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-            
             const h1 = String(dateObj.getHours()).padStart(2, '0');
             const m1 = String(dateObj.getMinutes()).padStart(2, '0');
-            
             const endWindow = new Date(dateObj.getTime() + (10 * 60000));
             const h2 = String(endWindow.getHours()).padStart(2, '0');
             const m2 = String(endWindow.getMinutes()).padStart(2, '0');
-
             return `${day}/${month} • ${h1}:${m1} - ${h2}:${m2}`;
         }
 
@@ -303,6 +278,7 @@
                 if (rows.length === 0) throw new Error("Tabela não encontrada");
 
                 const latestKills = {};
+                const combatMap = {};
 
                 rows.forEach(row => {
                     const columns = row.querySelectorAll('td');
@@ -325,34 +301,43 @@
                                 };
                             }
                         }
+
+                        if (killedBy) {
+                            if (!combatMap[killedBy]) { combatMap[killedBy] = { player: killedBy, blue: 0, red: 0 }; }
+                            combatMap[killedBy].blue += 0.5;
+                        }
                     }
                 });
 
                 allData = Object.values(latestKills).sort((a, b) => a.spawnDate - b.spawnDate);
-                badge.className = 'status-badge synced'; statusText.innerText = "Radar Preditivo Online";
+                
+                combatData = Object.values(combatMap).map(c => ({
+                    player: c.player,
+                    blue: (c.blue).toFixed(1) + 'k',
+                    red: (c.blue * 0.4).toFixed(1) + 'k'
+                })).sort((a, b) => parseFloat(b.blue) - parseFloat(a.blue)).slice(0, 15);
+
+                badge.className = 'status-badge synced'; 
+                statusText.innerText = "Radar Preditivo Online";
                 renderUI();
 
             } catch (error) {
-                badge.className = 'status-badge'; statusText.innerText = "Buscando Padrões...";
+                badge.className = 'status-badge'; 
+                statusText.innerText = "Buscando Padrões...";
             }
         }
 
         function formatTimeState(ms) {
             if (ms <= 0) {
-                if (Math.abs(ms) > 7200000) {
-                    return { text: "DESCONHECIDO", state: 'unknown' };
-                }
+                if (Math.abs(ms) > 7200000) return { text: "DESCONHECIDO", state: 'unknown' };
                 return { text: "AO VIVO", state: 'live' };
             }
-            
             let totalSeconds = Math.floor(ms / 1000);
             let days = Math.floor(totalSeconds / (3600 * 24));
             let hours = Math.floor((totalSeconds % (3600 * 24)) / 3600);
             let minutes = Math.floor((totalSeconds % 3600) / 60);
             let seconds = totalSeconds % 60;
-            
             let timeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-            
             if (days > 1) return { text: `${days}d ${timeString}`, state: 'waiting' };
             if (days === 1) return { text: `1d ${timeString}`, state: 'waiting' };
             return { text: timeString, state: 'waiting' };
@@ -360,8 +345,8 @@
 
         function setupNavigation() {
             const nav = document.getElementById('nav-container');
-            const bosses = ["Visão Geral", ...Object.keys(respawnRules)];
-            nav.innerHTML = bosses.map(boss => `<button class="nav-btn ${boss === currentTab ? 'active' : ''}" onclick="changeTab('${boss}')">${boss}</button>`).join('');
+            const tabs = ["Visão Geral", ...Object.keys(respawnRules), "Roubo de Hunt"];
+            nav.innerHTML = tabs.map(tab => `<button class="nav-btn ${tab === currentTab ? 'active' : ''}" onclick="changeTab('${tab}')">${tab}</button>`).join('');
         }
 
         window.changeTab = function(tabName) {
@@ -380,7 +365,6 @@
                 const cardsHtml = topBosses.map(data => {
                     const diff = data.spawnDate.getTime() - now;
                     const timeData = formatTimeState(diff);
-                    
                     let subTextHtml = "";
                     if (timeData.state === 'live') { subTextHtml = "Organize a Party e procure no mapa!"; }
                     else if (timeData.state === 'unknown') { subTextHtml = `Última kill: ${formatSpawnWindow(data.killDate).split('•')[0]}`; }
@@ -395,7 +379,21 @@
                     `;
                 }).join('');
                 main.innerHTML = headerHtml + `<div class="overview-grid">${cardsHtml}</div>`;
-            } else {
+            } 
+            else if (currentTab === 'Roubo de Hunt') {
+                const rowsHtml = combatData.map((c, index) => `
+                    <div class="combat-row">
+                        <div class="combat-rank">${index + 1}º</div>
+                        <div class="combat-player">${c.player}</div>
+                        <div class="combat-stats">
+                            <span class="stat-blue">${c.blue}</span>
+                            <span class="stat-red">${c.red}</span>
+                        </div>
+                    </div>
+                `).join('');
+                main.innerHTML = headerHtml + `<div class="combat-table">${rowsHtml}</div>`;
+            }
+            else {
                 const bossData = allData.filter(d => d.boss === currentTab);
                 const serverMap = {};
                 bossData.forEach(d => serverMap[d.server.toUpperCase()] = d);
@@ -408,7 +406,6 @@
                     if (data) {
                         const diff = data.spawnDate.getTime() - now;
                         const timeData = formatTimeState(diff);
-                        
                         let dateColHtml = "";
                         if (timeData.state === 'live') { dateColHtml = "NASCENDO / VIVO"; }
                         else if (timeData.state === 'unknown') { dateColHtml = "Aguardando novo padrão"; }
