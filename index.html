@@ -30,6 +30,8 @@
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
+            /* Impede a seleção de texto para dificultar cópias visuais */
+            user-select: none;
         }
 
         header {
@@ -75,13 +77,12 @@
             color: #fff;
         }
 
-        /* PAINEL ADMINISTRATIVO COM ANIMAÇÃO SUAVE */
         .admin-panel {
             display: none;
             opacity: 0;
             transform: translateY(-15px);
             transition: opacity 0.3s ease, transform 0.3s ease;
-            width: 100%; max-width: 500px;
+            width: 100%; max-width: 550px;
             background-color: var(--bg-panel);
             border: 1px solid var(--blood-red);
             padding: 30px 25px;
@@ -152,7 +153,6 @@
         .tag-input-wrapper { display: flex; gap: 10px; margin-bottom: 15px; }
         .tag-input-wrapper input { margin-bottom: 0; text-align: left; }
 
-        /* NAVEGAÇÃO / ABAS */
         .nav-container {
             width: 100%; max-width: 1200px; margin: 20px auto;
             display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; padding: 0 20px;
@@ -290,20 +290,20 @@
         <div id="configSection" style="display:none; text-align: left;">
             <p style="color: #00e676; margin-bottom: 10px; font-weight: bold; text-align: center;">Sessão Ativa (Admin)</p>
             
-            <label style="font-size: 0.85rem; color: #aaa; display: block; margin-bottom: 5px;">Adicionar Nick da Guilda:</label>
+            <label style="font-size: 0.85rem; color: #aaa; display: block; margin-bottom: 5px;">Adicionar Nicks (Cole separados por vírgula ou um por um):</label>
             <div class="tag-input-wrapper">
-                <input type="text" id="newNickInput" placeholder="Digite o nick e aperte Enter..." onkeypress="handleNickKey(event)">
+                <input type="text" id="newNickInput" placeholder="Ex: Nick1, Nick2, Nick3..." onkeypress="handleNickKey(event)">
                 <button class="admin-btn" style="margin-top:0;" onclick="addNickTag()">Adicionar</button>
             </div>
 
-            <label style="font-size: 0.85rem; color: #aaa; display: block; margin-bottom: 5px;">Membros Cadastrados (Clique no × para remover):</label>
+            <label style="font-size: 0.85rem; color: #aaa; display: block; margin-bottom: 5px;">Membros Monitorados:</label>
             <div class="tags-container" id="tagsContainer"></div>
 
             <div style="margin-top: 15px; display: flex; flex-direction: column; gap: 10px;">
                 <button class="admin-btn" style="width:100%; background-color: #00e676; color:#000;" onclick="saveGuildNicks()">Salvar Alterações</button>
                 
                 <div style="display: flex; gap: 10px; align-items: center; margin-top: 5px;">
-                    <input type="date" id="reportDate" style="margin-bottom:0; flex: 1;">
+                    <input type="date" id="reportDate" style="margin-bottom:0; flex: 1; background: #000; border: 1px solid var(--border-color); color: #fff; padding: 10px; border-radius: 4px;">
                     <button class="admin-btn" style="width: auto; background-color: #00b0ff; margin-top:0;" onclick="downloadPDF()">Baixar PDF</button>
                 </div>
 
@@ -325,6 +325,23 @@
     </footer>
 
     <script>
+        // --- BLINDAGEM DE SEGURANÇA (BLOQUEIO DE F12 E BOTÃO DIREITO) ---
+        document.addEventListener('contextmenu', event => event.preventDefault()); // Desativa botão direito
+        document.addEventListener('keydown', event => {
+            // Bloqueia F12
+            if (event.key === 'F12') {
+                event.preventDefault();
+            }
+            // Bloqueia Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U
+            if (event.ctrlKey && event.shiftKey && (event.key === 'I' || event.key === 'i' || event.key === 'J' || event.key === 'j' || event.key === 'C' || event.key === 'c')) {
+                event.preventDefault();
+            }
+            if (event.ctrlKey && (event.key === 'U' || event.key === 'u')) {
+                event.preventDefault();
+            }
+        });
+        // ----------------------------------------------------------------
+
         const SPREADSHEET_API = "https://script.google.com/macros/s/AKfycbwSjjSDkB846CR8m6hz_U95Anl00QOeml8GxBzYtow7MZKaBj60aIU9XRU2XvBnTlw8vA/exec"; 
         let guildMembersList = [];
 
@@ -343,7 +360,6 @@
         let combatData = [];
         let currentTab = 'Visão Geral';
 
-        // Verifica sessão salva ao carregar a página
         window.addEventListener('DOMContentLoaded', () => {
             if (localStorage.getItem('blood_admin_logged') === 'true') {
                 document.getElementById('loginSection').style.display = 'none';
@@ -356,7 +372,7 @@
             const panel = document.getElementById('adminPanel');
             if (panel.classList.contains('show')) {
                 panel.classList.remove('show');
-                setTimeout(() => panel.style.display = 'none', 300); // Aguarda o fim da animação
+                setTimeout(() => panel.style.display = 'none', 300);
             } else {
                 panel.style.display = 'block';
                 setTimeout(() => panel.classList.add('show'), 10);
@@ -414,8 +430,14 @@
         function addNickTag() {
             const input = document.getElementById('newNickInput');
             const val = input.value.trim();
-            if (val && !guildMembersList.includes(val)) {
-                guildMembersList.push(val);
+            if (val) {
+                const parts = val.split(',');
+                parts.forEach(part => {
+                    const cleanNick = part.trim();
+                    if (cleanNick && !guildMembersList.includes(cleanNick)) {
+                        guildMembersList.push(cleanNick);
+                    }
+                });
                 input.value = '';
                 renderTags();
             }
@@ -508,8 +530,16 @@
                 if (SPREADSHEET_API && SPREADSHEET_API !== "SUA_URL_DO_APPS_SCRIPT_AQUI") {
                     const sheetRes = await fetch(`${SPREADSHEET_API}?action=getPublicData`);
                     const sheetJson = await sheetRes.json();
-                    if (sheetJson.ranking) { combatData = sheetJson.ranking; }
+                    if (sheetJson.ranking) { 
+                        combatData = sheetJson.ranking; 
+                    }
                     if (sheetJson.members) { guildMembersList = sheetJson.members; }
+                } else if (guildMembersList.length > 0) {
+                    combatData = guildMembersList.map((nick, idx) => ({
+                        player: nick,
+                        blue: (10.5 - (idx * 0.7)).toFixed(1) + 'k',
+                        red: (3.2 - (idx * 0.2)).toFixed(1) + 'k'
+                    }));
                 }
 
                 const controller = new AbortController();
