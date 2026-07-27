@@ -193,11 +193,12 @@
 
     <header>
         <div class="logo-container">
-            <img src="undefined_-_Imgur.jpg" alt="Blood Esports">
+            <!-- AQUI ESTÁ A CORREÇÃO: .png em vez de .jpg -->
+            <img src="undefined_-_Imgur.png" alt="Blood Esports">
         </div>
         <div class="status-badge" id="status-badge">
             <div class="dot"></div>
-            <span id="status-text">Conectando ao Radar...</span>
+            <span id="status-text">Conectando ao Dashboard...</span>
         </div>
     </header>
 
@@ -212,6 +213,7 @@
     </footer>
 
     <script>
+        // MATEMÁTICA EXATA
         const respawnRules = {
             "Selupan": 34.16667,
             "Nightmare": 40.16667,
@@ -232,6 +234,7 @@
             return new Date(); 
         }
 
+        // JANELA DE CAÇA RESTRITA (10 MINUTOS MAX)
         function formatSpawnWindow(dateObj) {
             if (isNaN(dateObj.getTime())) return "N/A";
             const day = String(dateObj.getDate()).padStart(2, '0');
