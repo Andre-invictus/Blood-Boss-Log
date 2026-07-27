@@ -247,6 +247,12 @@
         .status-offline {
             font-size: 0.95rem; font-family: 'Inter', sans-serif; font-style: normal; font-weight: 600; color: #777; text-align: right; width: 100%;
         }
+        
+        .section-separator {
+            font-family: 'Teko', sans-serif; font-size: 1.4rem; color: var(--text-muted);
+            margin: 20px 0 10px 0; border-bottom: 1px dashed var(--border-color); padding-bottom: 5px;
+            text-transform: uppercase; font-style: italic; letter-spacing: 1px;
+        }
 
         footer {
             margin-top: auto; padding: 30px 20px; width: 100%;
@@ -345,7 +351,7 @@
             if (event.ctrlKey && (event.key === 'U' || event.key === 'u')) event.preventDefault();
         });
 
-        const SPREADSHEET_API = "https://script.google.com/macros/s/AKfycbzErAVz8lONWp3Mmz0wD_2FgOOPBehI7-WvTjqkGXGvDjz_Way-t8UPGCW5RofOVpI6ag/exec"; 
+        const SPREADSHEET_API = "https://script.google.com/macros/s/AKfycbyDgMO5DPFzg1aQe_ziysjy0SXO4H1WbDSsuj6uEjMmkR56-k0EyuGMGLbpauhZCJJl/exec"; 
         let guildMembersList = [];
         const MAX_MEMBERS = 30;
 
@@ -365,7 +371,6 @@
         let currentTab = 'Visão Geral';
 
         const dataDeHoje = new Date().toLocaleDateString('pt-BR');
-        
         let dailyScores = JSON.parse(localStorage.getItem('blood_daily_scores_' + dataDeHoje)) || {};
         let globalBaseline = {}; 
         let lastGasSyncTime = 0; 
@@ -815,21 +820,35 @@
 
                 let onlineHtml = '';
                 let offlineHtml = '';
-                let rankCounter = 1;
-                const processedNicks = new Set();
+                let rankCounterOnline = 1;
+                let rankCounterOffline = 1;
 
-                combatData.forEach(c => {
-                    processedNicks.add(c.player.toLowerCase());
+                // SEPARAÇÃO: Apenas quem está ONLINE fica em cima
+                let onlineList = combatData.filter(c => c.isOnline);
+                // Quem está OFFLINE (mas tem registro ou faz parte da guilda) fica embaixo
+                let offlineList = combatData.filter(c => !c.isOnline);
+
+                // Adiciona membros cadastrados que ainda não pontualiaram na lista offline
+                const processedNicks = new Set(combatData.map(c => c.player.toLowerCase()));
+                guildMembersList.forEach(nick => {
+                    if (!processedNicks.has(nick.toLowerCase())) {
+                        offlineList.push({
+                            player: nick,
+                            blue: "0.0k",
+                            red: "0.0k",
+                            isGuild: true,
+                            isOnline: false
+                        });
+                    }
+                });
+
+                // 1. MONTAGEM DO GRUPO ONLINE (EM CIMA)
+                onlineList.forEach(c => {
                     const tagGlobal = !c.isGuild ? '<span style="font-size:0.75rem; color:#777; margin-left: 8px; font-weight: normal;">(Global)</span>' : '';
-                    
-                    const onlineDot = c.isOnline 
-                        ? '<span style="color:#00e676; font-size:10px; margin-right:6px;" title="Online no Jogo">●</span>' 
-                        : '<span style="color:#e57373; font-size:10px; margin-right:6px;" title="Offline (Mas pontuou hoje)">●</span>';
-                    
                     onlineHtml += `
-                        <div class="combat-row" style="${!c.isOnline ? 'opacity: 0.65;' : ''}">
-                            <div class="combat-rank">${rankCounter++}º</div>
-                            <div class="combat-player">${onlineDot}${c.player} ${tagGlobal}</div>
+                        <div class="combat-row">
+                            <div class="combat-rank">${rankCounterOnline++}º</div>
+                            <div class="combat-player"><span style="color:#00e676; font-size:10px; margin-right:6px;" title="Online no Jogo">●</span>${c.player} ${tagGlobal}</div>
                             <div class="combat-stats">
                                 <span class="stat-blue">${c.blue || "0.0k"}</span>
                                 <span class="stat-red">${c.red || "0.0k"}</span>
@@ -838,21 +857,30 @@
                     `;
                 });
 
-                guildMembersList.forEach(nick => {
-                    if (!processedNicks.has(nick.toLowerCase())) {
-                        offlineHtml += `
-                            <div class="combat-row" style="opacity: 0.4; border-left-color: var(--unknown-grey);">
-                                <div class="combat-rank" style="color: var(--unknown-grey);">-</div>
-                                <div class="combat-player" style="color: #999;">${nick}</div>
-                                <div class="status-offline">
-                                    0.0k (Aguardando hunt)
-                                </div>
+                // 2. MONTAGEM DO GRUPO OFFLINE (EMBAIXO)
+                offlineList.forEach(c => {
+                    const tagGlobal = !c.isGuild ? '<span style="font-size:0.75rem; color:#777; margin-left: 8px; font-weight: normal;">(Global)</span>' : '';
+                    offlineHtml += `
+                        <div class="combat-row" style="opacity: 0.55; border-left-color: var(--unknown-grey);">
+                            <div class="combat-rank" style="color: var(--unknown-grey);">${rankCounterOffline++}º</div>
+                            <div class="combat-player"><span style="color:#e57373; font-size:10px; margin-right:6px;" title="Offline">●</span>${c.player} ${tagGlobal}</div>
+                            <div class="combat-stats">
+                                <span class="stat-blue">${c.blue || "0.0k"}</span>
+                                <span class="stat-red">${c.red || "0.0k"}</span>
                             </div>
-                        `;
-                    }
+                        </div>
+                    `;
                 });
 
-                main.innerHTML = headerHtml + `<div class="combat-table">${onlineHtml + offlineHtml}</div>`;
+                let finalTableHtml = '';
+                if (onlineHtml !== '') {
+                    finalTableHtml += `<div class="section-separator" style="color: var(--live-green);">Membros Online no Servidor</div>` + onlineHtml;
+                }
+                if (offlineHtml !== '') {
+                    finalTableHtml += `<div class="section-separator" style="color: var(--text-muted); margin-top: 25px;">Membros Offline / Ociosos</div>` + offlineHtml;
+                }
+
+                main.innerHTML = headerHtml + `<div class="combat-table">${finalTableHtml}</div>`;
             }
             else {
                 const bossData = allData.filter(d => d.boss === currentTab);
