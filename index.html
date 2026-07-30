@@ -45,29 +45,43 @@ function parseBR(x){let m=String(x).match(/(\d{2})\/(\d{2})\/(\d{4})[^\d]+(\d{2}
 function tabTitle(){return S.tab==='hunt'?tr('hunt'):S.tab==='huntOnline'?tr('huntOnline'):S.tab==='monthly'?tr('monthlyRanking'):S.tab==='overview'?tr('overview'):S.tab}function title(){return`<div class="title"><span>${esc(tabTitle().toUpperCase())}</span><span class="updated">${esc(tr('updated'))} ${new Date().toLocaleTimeString(S.lang)}</span></div>`}
 function nav(){if(!$('#nav'))return;const role=S.profile?String(S.profile.role).toLowerCase():'';let tabs=[{id:'overview',label:tr('overview')},...Object.keys(RULES).map(x=>({id:x,label:x})),{id:'monthly',label:tr('monthlyRanking')},{id:'hunt',label:tr('hunt')},...(['admin','officer'].includes(role)?[{id:'huntOnline',label:tr('huntOnline')}]:[])];$('#nav').innerHTML=tabs.map(t=>`<button class="tab ${t.id===S.tab?'active':''}" data-t="${esc(t.id)}">${esc(t.label)}</button>`).join('');document.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{S.tab=b.dataset.t;nav();render()})}
 function render(){if(!$('#main'))return;let now=Date.now();if(S.tab==='huntOnline'){
-const role=S.profile?String(S.profile.role).toLowerCase():'';if(!['admin','officer'].includes(role)){S.tab='overview';nav();return render()}
-const when=S.onlineUpdatedAt?new Date(S.onlineUpdatedAt).toLocaleTimeString(S.lang):'--',query=String(S.onlineSearch||'').trim().toLowerCase(),filtered=query?S.onlinePlayers.filter(n=>n.toLowerCase().includes(query)):S.onlinePlayers,exact=query?S.onlinePlayers.find(n=>n.toLowerCase()===query):null;
-const result=query?`<div class="search-result ${exact?'ok':'no'}"><b>${esc(S.onlineSearch)}</b> ${esc(exact?tr('playerOnline'):tr('playerOffline'))}.</div>`:'';
-const body=S.onlineLoading&&!S.onlinePlayers.length?`<p>${esc(tr('loadingOnline'))}</p>`:S.onlineError&&!S.onlinePlayers.length?`<div class="online-error">${esc(S.onlineError)}</div>`:`<div class="online-list">${filtered.map(n=>`<div class="online-item"><i class="online-dot"></i><span>${esc(n)}</span><span class="online-status">ON</span></div>`).join('')||`<p>${esc(tr('noRecords'))}</p>`}</div>`;
-$('#main').innerHTML=title()+`<div class="online-summary"><span class="online-count">${S.onlinePlayers.length} ${esc(tr('onlineNow'))}</span><span class="updated">${esc(tr('updated'))} ${esc(when)}</span></div><div class="search-online"><input id="onlineSearch" value="${esc(S.onlineSearch)}" placeholder="${esc(tr('searchPlayer'))}" autocomplete="off"><button type="button" aria-label="${esc(tr('searchPlayer'))}">⌕</button></div>${result}${S.onlineError&&S.onlinePlayers.length?`<div class="online-error">${esc(S.onlineError)}</div>`:''}${body}`;
+const role=S.profile?String(S.profile.role).toLowerCase():'';
+if(!['admin','officer'].includes(role)){S.tab='overview';nav();return render()}
+const activeSearch=document.activeElement&&document.activeElement.id==='onlineSearch';
+const selectionStart=activeSearch?document.activeElement.selectionStart:null;
+const selectionEnd=activeSearch?document.activeElement.selectionEnd:null;
+const when=S.onlineUpdatedAt?new Date(S.onlineUpdatedAt).toLocaleTimeString(S.lang):'--';
+const buildOnlineList=query=>{
+  const normalized=String(query||'').trim().toLowerCase();
+  const filtered=normalized?S.onlinePlayers.filter(n=>n.toLowerCase().includes(normalized)):S.onlinePlayers;
+  const exact=normalized?S.onlinePlayers.find(n=>n.toLowerCase()===normalized):null;
+  const result=normalized?`<div class="search-result ${exact?'ok':'no'}"><b>${esc(query)}</b> ${esc(exact?tr('playerOnline'):tr('playerOffline'))}.</div>`:'';
+  const list=`<div class="online-list">${filtered.map(n=>`<div class="online-item"><i class="online-dot"></i><span>${esc(n)}</span><span class="online-status">ON</span></div>`).join('')||`<p>${esc(tr('noRecords'))}</p>`}</div>`;
+  return result+list;
+};
+let content='';
+if(S.onlineLoading&&!S.onlinePlayers.length)content=`<p>${esc(tr('loadingOnline'))}</p>`;
+else if(S.onlineError&&!S.onlinePlayers.length)content=`<div class="online-error">${esc(S.onlineError)}</div>`;
+else content=buildOnlineList(S.onlineSearch);
+$('#main').innerHTML=title()+`<div class="online-summary"><span class="online-count">${S.onlinePlayers.length} ${esc(tr('onlineNow'))}</span><span class="updated">${esc(tr('updated'))} ${esc(when)}</span></div><div class="search-online"><input id="onlineSearch" value="${esc(S.onlineSearch)}" placeholder="${esc(tr('searchPlayer'))}" autocomplete="off"><button id="onlineSearchIcon" type="button" tabindex="-1" aria-label="${esc(tr('searchPlayer'))}">⌕</button></div>${S.onlineError&&S.onlinePlayers.length?`<div class="online-error">${esc(S.onlineError)}</div>`:''}<div id="onlineSearchResults">${content}</div>`;
 const input=$('#onlineSearch');
-if(input){
+const results=$('#onlineSearchResults');
+if(input&&results){
   input.oninput=e=>{
     S.onlineSearch=e.target.value;
-    const cursor=e.target.selectionStart;
-    render();
-    const next=$('#onlineSearch');
-    if(next){
-      next.focus();
-      const position=Math.min(cursor,next.value.length);
-      next.setSelectionRange(position,position);
-    }
+    results.innerHTML=buildOnlineList(S.onlineSearch);
   };
+  if(activeSearch){
+    input.focus({preventScroll:true});
+    const startPos=Math.min(selectionStart==null?input.value.length:selectionStart,input.value.length);
+    const endPos=Math.min(selectionEnd==null?startPos:selectionEnd,input.value.length);
+    input.setSelectionRange(startPos,endPos);
+  }
 }
 return}
 if(S.tab==='monthly'){const rows=S.monthlyRanking||[];$('#main').innerHTML=title()+`<p class="monthly-note">${esc(tr('monthlyHelp'))} ${esc(S.monthlyPeriod||'')}</p><div class="combat">${rows.map((x,i)=>`<div class="row monthly-row"><span class="rank">${i+1}º</span><span class="player">${esc(x.nick)}</span><span class="stats"><b class="blue">${esc(x.blue)}</b></span></div>`).join('')||`<p>${esc(tr('noRecords'))}</p>`}</div>`;return}
 if(S.tab==='hunt'){let rows=S.scores.map(x=>({...x,isRookie:S.rookies.some(n=>n.toLowerCase()===x.player.toLowerCase()),isOnline:x.isOnline!==false}));if(S.huntFilter==='members')rows=rows.filter(x=>!x.isRookie);if(S.huntFilter==='rookies')rows=rows.filter(x=>x.isRookie);rows.sort((a,b)=>(b.isOnline?1:0)-(a.isOnline?1:0)||parseFloat(b.blue)-parseFloat(a.blue));const filters=`<div class="filters"><button class="filter-btn ${S.huntFilter==='all'?'active':''}" data-hf="all">${esc(tr('all'))}</button><button class="filter-btn ${S.huntFilter==='members'?'active':''}" data-hf="members">${esc(tr('membersFilter'))}</button><button class="filter-btn ${S.huntFilter==='rookies'?'active':''}" data-hf="rookies">${esc(tr('rookies'))}</button></div>`;$('#main').innerHTML=title()+filters+`<div class="combat">${rows.map((x,i)=>`<div class="row ${x.isOnline?'':'offline-row'}"><span class="rank">${i+1}º</span><span class="player">${esc(x.player)}${x.isRookie?`<span class="rookie-badge">${esc(tr('rookie'))}</span>`:''}${!x.isOnline?`<span class="offline-badge">${esc(tr('offlinePlayer'))}</span>`:''}</span><span class="stats"><b class="blue">${esc(x.blue)}</b><b class="red">${esc(x.red)}</b></span></div>`).join('')||`<p>${esc(tr('noRecords'))}</p>`}</div>`;document.querySelectorAll('[data-hf]').forEach(b=>b.onclick=()=>{S.huntFilter=b.dataset.hf;localStorage.setItem('blood_hunt_filter',S.huntFilter);render()});return}let base=S.tab==='overview'?S.bosses:S.bosses.filter(x=>x.boss===S.tab),d=priorityOnly(base,now);$('#main').innerHTML=title()+`<div class="grid">${d.map(x=>{let z=state(+x.spawn-now);return`<article class="card ${z.c}"><div class="head"><b>${esc(x.boss)}</b><span class="tag">${esc(x.server)}</span></div><div class="timer" data-spawn="${+x.spawn}">${esc(z.t)}</div><div class="sub">${esc(tr('lastKill'))}: ${esc(x.killer)}</div></article>`}).join('')||`<p>${esc(tr('noLogs'))}</p>`}</div>`}
-function tick(){if(S.tab!=='hunt')render()}
+function tick(){if(S.tab==='overview'||Object.prototype.hasOwnProperty.call(RULES,S.tab))render()}
 function dashboardPlayers(){const box=$('#dashboardTags');if(!box)return;box.innerHTML=S.dashboardPlayers.map((p,i)=>`<div class="auto-player"><span><b>${esc(p.nick||p)}</b>${p.status?` <small>• ${esc(p.status)}</small>`:''}</span><button data-dr="${i}" type="button">x</button></div>`).join('');document.querySelectorAll('[data-dr]').forEach(b=>b.onclick=()=>{S.dashboardPlayers.splice(+b.dataset.dr,1);S.dashboardDirty=true;dashboardPlayers()});const st=$('#dashboardStatus');if(!st)return;if(S.dashboardInfo&&S.dashboardInfo.lastSyncUTC){const when=new Date(S.dashboardInfo.lastSyncUTC).toLocaleString(S.lang);st.textContent=`${tr('lastSync')}: ${when} • ${S.dashboardInfo.found||0}/${S.dashboardInfo.monitored||0}`;st.className='auto-status '+(S.dashboardInfo.success?'ok':'err')}else{st.textContent=tr('autoWaiting');st.className='auto-status'}}
 function members(){$('#nick').innerHTML=S.members.concat(S.rookies.filter(n=>!S.members.some(m=>m.toLowerCase()===n.toLowerCase()))).map(n=>`<option>${esc(n)}</option>`).join('');$('#tags').innerHTML=S.members.map((n,i)=>`<span class="member">${esc(n)} <button data-r="${i}">x</button></span>`).join('');document.querySelectorAll('[data-r]').forEach(b=>b.onclick=()=>{S.members.splice(+b.dataset.r,1);S.membersDirty=true;members()})}
 function rookies(){const box=$('#rookieTags');if(!box)return;box.innerHTML=S.rookies.map((n,i)=>`<span class="admin-chip rookie">${esc(n)} <button data-rr="${i}">x</button></span>`).join('');$('#rookieUnsaved').classList.toggle('show',S.rookiesDirty);document.querySelectorAll('[data-rr]').forEach(b=>b.onclick=()=>{S.rookies.splice(+b.dataset.rr,1);S.rookiesDirty=true;rookies();members()})}
