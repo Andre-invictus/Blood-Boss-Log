@@ -24,13 +24,19 @@ async function extLoad(){
   [X.accounts,X.adminAccounts,profileRows,X.favorites,X.goals,X.achievements,X.activity]=rs.map(x=>x.data||[]);
   X.profilesById=Object.fromEntries(profileRows.map(p=>[p.id,p]));
 }
-const oldAccept=accept;accept=async session=>{const ok=await oldAccept(session);if(ok){$('#urole').textContent=roleLabel(S.profile.role);await extLoad();nav();render();addAdminTools()}return ok};
+const oldAccept=accept;accept=async session=>{const ok=await oldAccept(session);if(ok){$('#urole').textContent=roleLabel(S.profile.role);try{await extLoad()}catch(e){console.warn(e)}nav();render();addAdminTools()}return ok};
 const oldLoad=load;load=async()=>{await oldLoad();try{await extLoad()}catch(e){console.warn(e)}if(['myProfile','rankings','compare','goals','achievements','activity'].includes(S.tab))render()};
 const oldNav=nav;nav=()=>{oldNav();const n=$('#nav');if(!n||!S.profile)return;const extras=[['myProfile','Meu Perfil'],['rankings','Rankings'],['compare','Comparar'],['goals','Metas'],['achievements','Conquistas'],['activity','Atividades']];const hunt=[...n.querySelectorAll('[data-t]')].find(x=>x.dataset.t==='hunt');extras.forEach(([id,label])=>{if(n.querySelector(`[data-t="${id}"]`))return;const b=document.createElement('button');b.className='tab'+(S.tab===id?' active':'');b.dataset.t=id;b.textContent=label;b.onclick=()=>{S.tab=id;nav();render()};n.insertBefore(b,hunt||null)})};
 function num(v){return parseFloat(String(v||0).replace('k','').replace('-',''))||0}function cards(items){return `<div class="grid">${items.map(x=>`<article class="card"><b>${esc(x[0])}</b><div class="timer ${x[2]||''}">${esc(x[1])}</div></article>`).join('')}</div>`}
 function profileView(){const mine=S.scores.filter(x=>own(x.player)),b=mine.reduce((a,x)=>a+num(x.blue),0),r=mine.reduce((a,x)=>a+num(x.red),0);return title()+cards([['Contas vinculadas',String(X.accounts.filter(x=>x.active).length)],['Roubado hoje',b.toFixed(1)+'k','blue'],['Perdido hoje',r.toFixed(1)+'k','red'],['Saldo',(b-r).toFixed(1)+'k']])+`<h2>Minhas contas</h2><div class="combat">${mine.map(x=>`<div class="row"><span class="player">${esc(x.player)} <span class="rookie-badge">EU</span></span><span class="stats"><b class="blue">${esc(x.blue)}</b><b class="red">${esc(x.red)}</b></span></div>`).join('')||'<p>Nenhuma conta vinculada.</p>'}</div>`}
 function rankingsView(){const rows=[...S.scores].sort((a,b)=>num(b.blue)-num(a.blue));return title()+`<div class="filters"><button class="filter-btn active">Hoje</button><button class="filter-btn">7 dias</button><button class="filter-btn">Mês</button></div><div class="combat">${rows.map((x,i)=>`<div class="row"><span class="rank">${i+1}º</span><span class="player">${esc(x.player)}${own(x.player)?' <span class="rookie-badge">EU</span>':''}</span><span class="stats"><b class="blue">${esc(x.blue)}</b><b class="red">${esc(x.red)}</b></span></div>`).join('')}</div>`}
-function compareView(){return title()+`<p class="sub">Selecione contas usando Ctrl ou Command.</p><select id="cmp" multiple style="width:100%;min-height:180px;background:#111;color:#fff;border:1px solid #333;padding:10px">${S.scores.map(x=>`<option>${esc(x.player)}</option>`).join('')}</select><button id="cmpBtn" class="btn blue" style="margin-top:10px">Comparar</button><div id="cmpOut"></div>`}
+function compareView(selected=[]){
+  const chosen=new Set(selected);
+  return title()+`<p class="sub">Selecione contas usando Ctrl ou Command.</p><select id="cmp" multiple style="width:100%;min-height:180px;background:#111;color:#fff;border:1px solid #333;padding:10px">${S.scores.map(x=>`<option value="${esc(x.player)}" ${chosen.has(x.player)?'selected':''}>${esc(x.player)}</option>`).join('')}</select><button id="cmpBtn" class="btn blue" style="margin-top:10px">Comparar</button><div id="cmpOut"></div>`
+}
+function compareResults(names){
+  return '<div class="combat" style="margin-top:15px">'+S.scores.filter(x=>names.includes(x.player)).map(x=>`<div class="row"><span class="player">${esc(x.player)}</span><span class="stats"><b class="blue">${esc(x.blue)}</b><b class="red">${esc(x.red)}</b></span></div>`).join('')+'</div>'
+}
 function simpleList(items,renderItem){return title()+`<div class="combat">${items.map(renderItem).join('')||'<p>Nenhum item.</p>'}</div>`}
 async function editAchievement(id){
   if(!isAdmin())return;
@@ -66,7 +72,29 @@ function bindPublicAdminActions(){
   document.querySelectorAll('[data-edit-act]').forEach(b=>b.onclick=()=>editActivity(b.dataset.editAct));
   document.querySelectorAll('[data-del-act]').forEach(b=>b.onclick=()=>deleteActivity(b.dataset.delAct));
 }
-const oldRender=render;render=()=>{if(S.tab==='myProfile'){$('#main').innerHTML=profileView();return}if(S.tab==='rankings'){$('#main').innerHTML=rankingsView();return}if(S.tab==='compare'){$('#main').innerHTML=compareView();$('#cmpBtn').onclick=()=>{const names=[...$('#cmp').selectedOptions].map(x=>x.value);$('#cmpOut').innerHTML='<div class="combat" style="margin-top:15px">'+S.scores.filter(x=>names.includes(x.player)).map(x=>`<div class="row"><span class="player">${esc(x.player)}</span><span class="stats"><b class="blue">${esc(x.blue)}</b><b class="red">${esc(x.red)}</b></span></div>`).join('')+'</div>'};return}if(S.tab==='goals'){$('#main').innerHTML=simpleList(X.goals,g=>`<div class="row"><span class="player">🎯 ${esc(g.title)}<small class="sub"> ${esc(g.description||'')}</small></span><b class="blue">${esc(g.target_k)}k</b></div>`);return}if(S.tab==='achievements'){$('#main').innerHTML=simpleList(X.achievements,a=>`<div class="row"><span class="rank">${esc(a.icon||'🏆')}</span><span class="player">${esc(a.title)}<small class="sub"> ${esc(a.description||'')}</small></span><b>${esc(a.threshold_k)}k</b>${isAdmin()?`<span class="adm-inline-actions"><button class="btn" data-edit-ach="${esc(a.id)}">Editar</button><button class="btn" data-del-ach="${esc(a.id)}">Apagar</button></span>`:''}</div>`);bindPublicAdminActions();return}if(S.tab==='activity'){$('#main').innerHTML=simpleList(X.activity,a=>`<div class="row"><span class="player">${esc(a.actor_name)} <span class="role">${esc(a.actor_role)}</span> ${esc(a.action)} ${esc(a.entity_name)}</span><small>${new Date(a.created_at).toLocaleString(S.lang)}</small>${isAdmin()?`<span class="adm-inline-actions"><button class="btn" data-edit-act="${esc(a.id)}">Editar</button><button class="btn" data-del-act="${esc(a.id)}">Apagar</button></span>`:''}</div>`);bindPublicAdminActions();return}oldRender();decorate()};
+const oldRender=render;render=()=>{if(S.tab==='myProfile'){$('#main').innerHTML=profileView();return}if(S.tab==='rankings'){$('#main').innerHTML=rankingsView();return}if(S.tab==='compare'){
+  const oldSelect=$('#cmp');
+  const selected=oldSelect?[...oldSelect.selectedOptions].map(o=>o.value):(S.compareSelected||[]);
+  const hadFocus=document.activeElement===oldSelect;
+  const oldScroll=window.scrollY;
+  S.compareSelected=selected;
+  $('#main').innerHTML=compareView(selected);
+  const select=$('#cmp');
+  select.onchange=()=>{S.compareSelected=[...select.selectedOptions].map(o=>o.value)};
+  if(S.compareHasResult&&S.compareSelected.length)$('#cmpOut').innerHTML=compareResults(S.compareSelected);
+  $('#cmpBtn').onclick=()=>{
+    S.compareSelected=[...select.selectedOptions].map(o=>o.value);
+    S.compareHasResult=true;
+    $('#cmpOut').innerHTML=compareResults(S.compareSelected);
+    translateEnhancements($('#main'));
+  };
+  requestAnimationFrame(()=>{
+    window.scrollTo(0,oldScroll);
+    if(hadFocus)select.focus({preventScroll:true});
+    translateEnhancements($('#main'));
+  });
+  return
+}if(S.tab==='goals'){$('#main').innerHTML=simpleList(X.goals,g=>`<div class="row"><span class="player">🎯 ${esc(g.title)}<small class="sub"> ${esc(g.description||'')}</small></span><b class="blue">${esc(g.target_k)}k</b></div>`);return}if(S.tab==='achievements'){$('#main').innerHTML=simpleList(X.achievements,a=>`<div class="row"><span class="rank">${esc(a.icon||'🏆')}</span><span class="player">${esc(a.title)}<small class="sub"> ${esc(a.description||'')}</small></span><b>${esc(a.threshold_k)}k</b>${isAdmin()?`<span class="adm-inline-actions"><button class="btn" data-edit-ach="${esc(a.id)}">Editar</button><button class="btn" data-del-ach="${esc(a.id)}">Apagar</button></span>`:''}</div>`);bindPublicAdminActions();return}if(S.tab==='activity'){$('#main').innerHTML=simpleList(X.activity,a=>`<div class="row"><span class="player">${esc(a.actor_name)} <span class="role">${esc(a.actor_role)}</span> ${esc(a.action)} ${esc(a.entity_name)}</span><small>${new Date(a.created_at).toLocaleString(S.lang)}</small>${isAdmin()?`<span class="adm-inline-actions"><button class="btn" data-edit-act="${esc(a.id)}">Editar</button><button class="btn" data-del-act="${esc(a.id)}">Apagar</button></span>`:''}</div>`);bindPublicAdminActions();return}oldRender();decorate()};
 function decorate(){document.querySelectorAll('.row .player,.online-item span:nth-child(2)').forEach(el=>{const n=el.firstChild&&el.firstChild.textContent.trim();if(n&&own(n)&&!el.querySelector('.my-badge')){const b=document.createElement('span');b.className='rookie-badge my-badge';b.textContent='EU';el.appendChild(b)}if(n&&fav(n)&&!el.textContent.includes('★'))el.insertAdjacentText('afterbegin','★ ')})}
 function addAdminTools(){
   if(!isAdmin()||$('#extAdmin'))return;
@@ -157,5 +185,16 @@ function addAdminTools(){
   $('#acSave').onclick=async()=>{const {data}=await sb.auth.getUser(),payload={title:$('#acTitle').value.trim(),description:$('#acDescription').value.trim(),metric:$('#acMetric').value,period:$('#acPeriod').value,threshold_k:+$('#acValue').value,created_by:data.user.id,updated_by:data.user.id};if(!payload.title||!payload.threshold_k)return alert('Informe o nome e o valor da conquista.');const {error}=await sb.from('achievements').insert(payload);alert(error?error.message:'Conquista criada');if(!error){await extLoad();refreshLists()}};
   $('#goSave').onclick=async()=>{const {data}=await sb.auth.getUser(),payload={title:$('#goTitle').value.trim(),description:$('#goDescription').value.trim(),period:$('#goPeriod').value,target_k:+$('#goValue').value,created_by:data.user.id,updated_by:data.user.id};if(!payload.title||!payload.target_k)return alert('Informe o nome e o valor da meta.');const {error}=await sb.from('goals').insert(payload);alert(error?error.message:'Meta criada');if(!error){await extLoad();refreshLists()}};
 }
-setInterval(()=>{if(S.profile)extLoad().catch(()=>{})},30000);
+function ensureAdminTools(){
+  if(!isAdmin())return;
+  const dialog=$('#admin');if(!dialog)return;
+  if(!$('#extAdmin'))addAdminTools();
+  if($('#extAdmin'))translateEnhancements($('#extAdmin'));
+}
+const originalAdminOpen=$('#admOpen')&&$('#admOpen').onclick;
+if($('#admOpen'))$('#admOpen').onclick=()=>{ensureAdminTools();if(originalAdminOpen)originalAdminOpen();else $('#admin').showModal()};
+setTimeout(ensureAdminTools,400);
+setInterval(()=>{if(S.profile){extLoad().catch(()=>{});ensureAdminTools()}},30000);
+setInterval(()=>translateEnhancements(document),800);
+$('#siteLanguage')&&$('#siteLanguage').addEventListener('change',()=>setTimeout(()=>translateEnhancements(document),50));
 })();
