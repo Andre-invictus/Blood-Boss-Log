@@ -47,8 +47,8 @@ async function requireAdmin(req) {
   if (!profileResponse.ok) throw Object.assign(new Error('Não foi possível validar o perfil.'), { status: 403 });
   const profiles = await profileResponse.json();
   const profile = profiles[0];
-  if (!profile || profile.active === false || String(profile.role).toLowerCase() !== 'admin') {
-    throw Object.assign(new Error('Acesso permitido somente para ADM.'), { status: 403 });
+  if (!profile || profile.active === false || !['admin', 'officer'].includes(String(profile.role).toLowerCase())) {
+    throw Object.assign(new Error('Acesso permitido somente para Admin ou Battle.'), { status: 403 });
   }
 }
 
