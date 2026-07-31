@@ -46,6 +46,7 @@ function parseBR(x){let m=String(x).match(/(\d{2})\/(\d{2})\/(\d{4})[^\d]+(\d{2}
 function tabTitle(){return S.tab==='hunt'?tr('hunt'):S.tab==='huntOnline'?tr('huntOnline'):S.tab==='monthly'?tr('monthlyRanking'):S.tab==='overview'?tr('overview'):S.tab}function title(){return`<div class="title"><span>${esc(tabTitle().toUpperCase())}</span><span class="updated">${esc(tr('updated'))} ${new Date().toLocaleTimeString(S.lang)}</span></div>`}
 function nav(){if(!$('#nav'))return;const role=S.profile?String(S.profile.role).toLowerCase():'';let tabs=[{id:'overview',label:tr('overview')},...Object.keys(RULES).map(x=>({id:x,label:x})),{id:'monthly',label:tr('monthlyRanking')},{id:'hunt',label:tr('hunt')},...(['admin','officer'].includes(role)?[{id:'huntOnline',label:tr('huntOnline')}]:[])];$('#nav').innerHTML=tabs.map(t=>`<button class="tab ${t.id===S.tab?'active':''}" data-t="${esc(t.id)}">${esc(t.label)}</button>`).join('');document.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{S.tab=b.dataset.t;nav();render()})}
 function render(){if(!$('#main'))return;let now=Date.now();if(S.tab==='huntOnline'){
+if(S.onlineEditorActive&&document.activeElement&&document.activeElement.classList.contains('online-classify'))return;
 const role=S.profile?String(S.profile.role).toLowerCase():'';
 if(!['admin','officer'].includes(role)){S.tab='overview';nav();return render()}
 const activeSearch=document.activeElement&&document.activeElement.id==='onlineSearch';
@@ -70,7 +71,12 @@ const buildOnlineList=query=>{
 let content='';if(S.onlineLoading&&!S.onlinePlayers.length)content=`<p>${esc(tr('loadingOnline'))}</p>`;else if(S.onlineError&&!S.onlinePlayers.length)content=`<div class="online-error">${esc(S.onlineError)}</div>`;else content=buildOnlineList(S.onlineSearch);
 const filters=['all','enemy','ally','general'].map(c=>`<button class="online-tag-filter ${S.onlineTagFilter===c?'active':''}" data-online-filter="${c}">${esc(filterText(c))} <b>${counts[c]}</b></button>`).join('');
 $('#main').innerHTML=title()+`<div class="online-summary"><span class="online-count">${S.onlinePlayers.length} ${esc(tr('onlineNow'))}</span><span class="updated">${esc(tr('updated'))} ${esc(when)}</span></div><div class="online-tag-filters">${filters}</div><div class="search-online"><input id="onlineSearch" value="${esc(S.onlineSearch)}" placeholder="${esc(tr('searchPlayer'))}" autocomplete="off"><button id="onlineSearchIcon" type="button" tabindex="-1" aria-label="${esc(tr('searchPlayer'))}">⌕</button></div>${S.onlineError&&S.onlinePlayers.length?`<div class="online-error">${esc(S.onlineError)}</div>`:''}<div id="onlineSearchResults">${content}</div>`;
-const results=$('#onlineSearchResults');const bindOnlineActions=()=>{document.querySelectorAll('[data-online-nick]').forEach(x=>x.onchange=()=>saveOnlineLabel(x.dataset.onlineNick,x.value))};
+const results=$('#onlineSearchResults');const bindOnlineActions=()=>{document.querySelectorAll('[data-online-nick]').forEach(x=>{
+ x.onfocus=()=>{S.onlineEditorActive=true};
+ x.onpointerdown=()=>{S.onlineEditorActive=true};
+ x.onchange=async()=>{await saveOnlineLabel(x.dataset.onlineNick,x.value)};
+ x.onblur=()=>{S.onlineEditorActive=false;setTimeout(()=>{if(S.tab==='huntOnline')render()},120)};
+})};
 document.querySelectorAll('[data-online-filter]').forEach(b=>b.onclick=()=>{S.onlineTagFilter=b.dataset.onlineFilter;localStorage.setItem('blood_online_tag_filter',S.onlineTagFilter);render()});
 const input=$('#onlineSearch');if(input&&results){input.oninput=e=>{S.onlineSearch=e.target.value;results.innerHTML=buildOnlineList(S.onlineSearch);bindOnlineActions()};bindOnlineActions();if(activeSearch){input.focus({preventScroll:true});const a=Math.min(selectionStart??input.value.length,input.value.length),b=Math.min(selectionEnd??a,input.value.length);input.setSelectionRange(a,b)}}
 requestAnimationFrame(()=>window.scrollTo(0,pageScroll));return}
@@ -92,7 +98,6 @@ async function saveOnlineLabel(nickname,classification){
   const {error}=await sb.from('hunt_online_labels').upsert({nickname,classification,updated_by:userData.user.id,updated_at:new Date().toISOString()},{onConflict:'nickname_key'});
   if(error)return alert(error.message);
   S.onlineLabels[String(nickname).toLowerCase()]=classification;
-  render();
 }
 async function loadHuntOnline(force=false){
 if(!S.profile||!['admin','officer'].includes(String(S.profile.role).toLowerCase()))return;
@@ -108,5 +113,5 @@ async function busy(btn,fn){if(S.busy)return;S.busy=true;btn.disabled=true;try{a
 $('#loginLanguage').onchange=e=>setLang(e.target.value);$('#siteLanguage').onchange=e=>setLang(e.target.value);$('#admOpen').onclick=()=>$('#admin').showModal();$('#admClose').onclick=()=>$('#admin').close();$('#addNick').onclick=()=>{$('#newNick').value.split(',').map(x=>x.trim()).filter(Boolean).forEach(n=>{if(!S.members.some(x=>x.toLowerCase()===n.toLowerCase()))S.members.push(n)});$('#newNick').value='';S.membersDirty=true;members()};$('#saveMembers').onclick=()=>busy($('#saveMembers'),async()=>{await api('updateMembers',{nicks:S.members.join(','),requestId:rid()});S.membersDirty=false;alert(tr('listSaved'));load()});$('#score').onclick=()=>busy($('#score'),async()=>{await api('addManualDelta',{nick:$('#nick').value,blue:$('#blue').value,red:$('#red').value,requestId:rid()});alert(tr('scoreSaved'));load()});$('#addDashboardNick').onclick=()=>{const n=$('#dashboardNick').value.trim();if(n&&!S.dashboardPlayers.some(x=>(x.nick||x).toLowerCase()===n.toLowerCase()))S.dashboardPlayers.push({nick:n,active:true,status:'NOVO'});$('#dashboardNick').value='';S.dashboardDirty=true;dashboardPlayers()};$('#saveDashboardPlayers').onclick=()=>busy($('#saveDashboardPlayers'),async()=>{await api('updateDashboardPlayers',{nicks:S.dashboardPlayers.map(x=>x.nick||x).join(','),requestId:rid()});S.dashboardDirty=false;alert(tr('monitorsSaved'));await load()});$('#syncDashboardNow').onclick=()=>busy($('#syncDashboardNow'),async()=>{const j=await api('syncDashboardHunt',{requestId:rid()});alert(tr('syncComplete')+`: ${j.created||0}`);await load()});$('#addRookie').onclick=()=>{$('#newRookie').value.split(',').map(x=>x.trim()).filter(Boolean).forEach(n=>{if(!S.rookies.some(x=>x.toLowerCase()===n.toLowerCase()))S.rookies.push(n)});$('#newRookie').value='';S.rookiesDirty=true;rookies();members()};$('#saveRookies').onclick=()=>busy($('#saveRookies'),async()=>{await api('updateRookies',{nicks:S.rookies.join(','),requestId:rid()});S.rookiesDirty=false;rookies();alert(tr('rookiesSaved'));load()});$('#report').onclick=()=>busy($('#report'),async()=>{let j=await api('downloadPDF',{startDate:$('#start').value,endDate:$('#end').value}),a=document.createElement('a');a.href='data:application/pdf;base64,'+j.pdfBase64;a.download='Relatorio_Hunt.pdf';a.click()});
 setLang(S.lang);sb.auth.getSession().then(({data})=>accept(data.session).then(ok=>{if(!ok){$('#login').classList.remove('hidden');document.documentElement.classList.add('locked')}}));
 </script>
-<script src="/enhancements.js?v=11"></script>
+<script src="/enhancements.js?v=12"></script>
 </body></html>
