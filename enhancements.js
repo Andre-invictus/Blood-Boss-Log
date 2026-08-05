@@ -139,6 +139,7 @@ function addAdminTools(){
       <button class="active" data-ap="accounts">👤 Contas vinculadas</button>
       <button data-ap="achievements">🏆 Conquistas</button>
       <button data-ap="goals">🎯 Metas</button>
+      <button data-ap="birthday">🎉 Evento de Aniversário</button>  
       <button data-ap="legacy">⚙️ Gestão antiga</button>
     </div></aside>
     <section class="adm-main">
@@ -172,11 +173,13 @@ function addAdminTools(){
           <div class="adm-actions"><button id="goSave" class="adm-primary">Criar meta</button></div>
         </div><div class="adm-card"><h4>Metas ativas</h4><div id="goList" class="adm-list"></div></div></div>
       </div>
+      <div class="adm-panel" data-panel="birthday"><div class="adm-head"><h3>Evento de Aniversário</h3><p>Controle a exibição da aba. A proteção dos cálculos normais permanece sempre ativa.</p></div><div class="adm-card"><div class="adm-field"><label>Exibir aba Aniversário</label><select id="birthdayToggle"><option value="false">Desativado</option><option value="true">Ativado</option></select></div><div class="adm-help">Horários fixos: 00:55, 03:55, 06:55, 09:55, 12:55, 15:55, 18:55 e 21:55.</div><div class="adm-actions"><button id="birthdaySave" class="adm-primary">Salvar configuração</button></div></div></div>  
       <div class="adm-panel" data-panel="legacy"><div class="adm-head"><h3>Gestão antiga</h3><p>Acesse lançamentos manuais, membros, novatos, monitoramento e relatório PDF.</p></div><div id="legacyHost"></div></div>
     </section></div>`;
   const legacy=[...d.querySelectorAll(':scope > .group')].filter(x=>x.id!=='extAdmin');
   d.appendChild(box);const legacyHost=box.querySelector('#legacyHost');legacy.forEach(x=>{x.style.display='block';legacyHost.appendChild(x)});
   box.querySelectorAll('[data-ap]').forEach(btn=>btn.onclick=()=>{box.querySelectorAll('[data-ap]').forEach(x=>x.classList.toggle('active',x===btn));box.querySelectorAll('.adm-panel').forEach(x=>x.classList.toggle('active',x.dataset.panel===btn.dataset.ap))});
+  const loadBirthdayAdmin=async()=>{const {data}=await sb.from('birthday_event_settings').select('enabled').eq('id',true).single();if(data&&$('#birthdayToggle'))$('#birthdayToggle').value=String(!!data.enabled)};loadBirthdayAdmin();if($('#birthdaySave'))$('#birthdaySave').onclick=async()=>{const {data:u}=await sb.auth.getUser();const enabled=$('#birthdayToggle').value==='true';const {error}=await sb.from('birthday_event_settings').update({enabled,updated_at:new Date().toISOString(),updated_by:u.user.id}).eq('id',true);if(error)return alert(error.message);S.birthdayEnabled=enabled;nav();if(!enabled&&S.tab==='birthday'){S.tab='overview';render()}alert('Configuração salva')};  
   const targetToggle=(selectId,fieldsId)=>{$(selectId).onchange=e=>$(fieldsId).classList.toggle('hidden',['guild','all_players'].includes(e.target.value))};
   targetToggle('#acTarget','#acTargetFields');targetToggle('#goTarget','#goTargetFields');
   const refreshLists=()=>{const accountList=$('#paList'),acList=$('#acList'),goList=$('#goList');if(accountList)accountList.innerHTML=X.adminAccounts.length?X.adminAccounts.map(a=>{const owner=X.profilesById[a.user_id]||{};return `<div class="adm-list-item"><span><b>${esc(a.nickname)}</b><small class="sub"> ${esc(owner.display_name||owner.email||a.user_id)}</small><small class="sub" style="display:block">${esc(a.user_id)}</small></span><span class="tag">${a.active?'ATIVO':'INATIVO'}</span></div>`}).join(''):'<div class="adm-empty">Nenhum vínculo encontrado.</div>';if(acList)acList.innerHTML=X.achievements.length?X.achievements.map(a=>`<div class="adm-list-item"><span><b>${esc(a.title)}</b><small class="sub"> ${esc(a.period)} · ${esc(a.metric)}</small></span><b>${esc(a.threshold_k)}k</b></div>`).join(''):'<div class="adm-empty">Nenhuma conquista ativa.</div>';if(goList)goList.innerHTML=X.goals.length?X.goals.map(g=>`<div class="adm-list-item"><span><b>${esc(g.title)}</b><small class="sub"> ${esc(g.period)}</small></span><b>${esc(g.target_k)}k</b></div>`).join(''):'<div class="adm-empty">Nenhuma meta ativa.</div>'};
