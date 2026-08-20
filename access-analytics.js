@@ -1,4 +1,4 @@
-/* Blood Access Presence v18 */
+/* Blood Access Presence v18.4 - all roles */
 (()=>{
  const A={id:null,row:null,channel:null,lastPage:'',started:false,geo:null,startedAt:null};
  const page=()=>document.querySelector('#nav .tab.active')?.textContent.trim()||'Visão Geral';
@@ -7,11 +7,11 @@
  const os=()=>{const u=navigator.userAgent;return /Windows/.test(u)?'Windows':/Android/.test(u)?'Android':/iPhone|iPad/.test(u)?'iOS':/Mac OS/.test(u)?'macOS':/Linux/.test(u)?'Linux':'Outro'};
  async function context(){try{const {data}=await sb.auth.getSession(),t=data.session?.access_token;if(!t)return{};const r=await fetch('/api/access-context',{headers:{Authorization:'Bearer '+t},cache:'no-store'});return r.ok?await r.json():{}}catch{return{}}}
  async function start(){if(A.started||!S.profile)return;A.started=true;A.id=crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random();A.startedAt=new Date().toISOString();A.geo=await context();presence();const payload={session_id:A.id,user_id:S.profile.id,started_at:A.startedAt,last_seen_at:A.startedAt,current_page:page(),language:S.lang,device_type:device(),browser_name:browser(),os_name:os(),timezone:Intl.DateTimeFormat().resolvedOptions().timeZone||'',country_code:A.geo.country||null,region_code:A.geo.region||null,city_name:A.geo.city||null,latitude:A.geo.latitude||null,longitude:A.geo.longitude||null};const {data,error}=await sb.from('access_sessions').insert(payload).select('id').single();if(error)console.warn('Access history unavailable, realtime remains active:',error);else{A.row=data.id;await view(true)}setInterval(heartbeat,60000);setInterval(()=>view(false),1500)}
- async function heartbeat(){if(!A.row)return;await sb.from('access_sessions').update({last_seen_at:new Date().toISOString(),current_page:page(),language:S.lang}).eq('id',A.row)}
+ async function heartbeat(){if(A.channel)await A.channel.track(state());if(!A.row)return;await sb.from('access_sessions').update({last_seen_at:new Date().toISOString(),current_page:page(),language:S.lang}).eq('id',A.row)}
  async function view(force){if(!A.row)return;const p=page();if(!force&&p===A.lastPage)return;A.lastPage=p;await sb.from('access_pageviews').insert({session_id:A.id,user_id:S.profile.id,page_name:p,viewed_at:new Date().toISOString()});await heartbeat();if(A.channel)await A.channel.track(state())}
  function state(){return{user_id:S.profile.id,display_name:S.profile.display_name||'',role:S.profile.role,page:page(),session_id:A.id,online_at:A.startedAt||new Date().toISOString(),last_seen_at:new Date().toISOString(),device_type:device(),browser_name:browser(),os_name:os(),country_code:A.geo?.country||null,region_code:A.geo?.region||null,city_name:A.geo?.city||null,latitude:A.geo?.latitude||null,longitude:A.geo?.longitude||null}}
  function presence(){A.channel=sb.channel('blood-site-presence',{config:{presence:{key:A.id}}});A.channel.subscribe(async status=>{if(status==='SUBSCRIBED')await A.channel.track(state())})}
  async function finish(){if(A.row)await sb.from('access_sessions').update({ended_at:new Date().toISOString(),last_seen_at:new Date().toISOString()}).eq('id',A.row)}
- addEventListener('pagehide',finish);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')heartbeat()});
+ addEventListener('pagehide',finish);addEventListener('focus',heartbeat);addEventListener('online',heartbeat);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')heartbeat()});
  const boot=setInterval(()=>{if(typeof S!=='undefined'&&S.profile){clearInterval(boot);start()}},300)
 })();
