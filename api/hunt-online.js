@@ -22,28 +22,23 @@ function cleanCell(value) {
   return decodeHtml(String(value || '').replace(/<script[\s\S]*?<\/script>/gi, '').replace(/<style[\s\S]*?<\/style>/gi, '').replace(/<[^>]+>/g, ' ')).replace(/\s+/g, ' ').trim();
 }
 function extractOnlinePlayers(html) {
-  const players = [], seen = new Set();
-  const rows = html.match(/<tr\b[^>]*>[\s\S]*?<\/tr>/gi) || [];
-  for (const row of rows) {
-    const rawCells = [...row.matchAll(/<t[dh]\b[^>]*>([\s\S]*?)<\/t[dh]>/gi)].map(m => m[1]);
-    if (rawCells.length < 4) continue;
-    const cells = rawCells.map(cleanCell);
-    if (cells.some(v => /personagem|character/i.test(v)) && cells.some(v => /guild/i.test(v))) continue;
-    const badges = [...row.matchAll(/<span\b[^>]*class=["'][^"']*\bbadge\b[^"']*["'][^>]*>([\s\S]*?)<\/span>/gi)].map(m => cleanCell(m[1]).toUpperCase());
-    if (!badges.includes('ON')) continue;
-    let nickname='', guild='', huntingLevel=null;
-    if (cells.length >= 6) {
-      nickname=cells[1]; guild=cells[3]; huntingLevel=cells[5];
-    } else {
-      nickname=cells[0]; guild=cells[Math.max(1,cells.length-3)]; huntingLevel=cells[cells.length-1];
+  const players=[],seen=new Set(),rows=html.match(/<tr\b[^>]*>[\s\S]*?<\/tr>/gi)||[];
+  let columns={nickname:1,guild:3,hunting:5};
+  for(const row of rows){
+    const raw=[...row.matchAll(/<t[dh]\b[^>]*>([\s\S]*?)<\/t[dh]>/gi)].map(m=>m[1]);
+    if(!raw.length)continue;
+    const cells=raw.map(cleanCell),lower=cells.map(x=>x.toLowerCase());
+    if(lower.some(x=>/personagem|character/.test(x))){
+      const nick=lower.findIndex(x=>/personagem|character/.test(x)),guild=lower.findIndex(x=>/^guild$|guilda/.test(x)),hunt=lower.findIndex(x=>/hunting\s*level|hunt\s*level/.test(x));
+      if(nick>=0)columns.nickname=nick;if(guild>=0)columns.guild=guild;if(hunt>=0)columns.hunting=hunt;continue;
     }
-    nickname=String(nickname).replace(/\bON\b/gi,'').replace(/\s+/g,' ').trim();
-    guild=String(guild||'').replace(/^[-–—]+$/,'').trim();
-    const match=String(huntingLevel||'').match(/\d[\d.,]*/);
-    huntingLevel=match ? Number(match[0].replace(/\./g,'').replace(',','.')) : null;
-    const key=nickname.toLowerCase();
-    if (!nickname || seen.has(key)) continue;
-    seen.add(key);players.push({nickname,guild:guild||'',huntingLevel:Number.isFinite(huntingLevel)?huntingLevel:null,online:true});
+    const badges=[...row.matchAll(/<span\b[^>]*class=["'][^"']*\bbadge\b[^"']*["'][^>]*>([\s\S]*?)<\/span>/gi)].map(m=>cleanCell(m[1]).toUpperCase());
+    if(!badges.includes('ON'))continue;
+    let nickname=cells[columns.nickname]||'',guild=cells[columns.guild]||'',huntingLevel=cells[columns.hunting]||'';
+    nickname=nickname.replace(/\b(?:ON|OFF|MEGA\s*VIP|VIP)\b/gi,'').replace(/\s+/g,' ').trim();
+    guild=guild.replace(/\b(?:ON|OFF)\b/gi,'').replace(/^[-–—]+$/,'').trim();
+    const hm=String(huntingLevel).match(/\d[\d.,]*/);huntingLevel=hm?Number(hm[0].replace(/\./g,'').replace(',','.')):null;
+    const key=nickname.toLowerCase();if(!nickname||seen.has(key))continue;seen.add(key);players.push({nickname,guild:guild||'',huntingLevel:Number.isFinite(huntingLevel)?huntingLevel:null,online:true});
   }
   return players;
 }
