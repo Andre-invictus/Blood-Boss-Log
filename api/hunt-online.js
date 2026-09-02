@@ -18,20 +18,35 @@ function decodeHtml(value) {
     .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(Number(n)));
 }
 
+function cleanCell(value) {
+  return decodeHtml(String(value || '').replace(/<script[\s\S]*?<\/script>/gi, '').replace(/<style[\s\S]*?<\/style>/gi, '').replace(/<[^>]+>/g, ' ')).replace(/\s+/g, ' ').trim();
+}
 function extractOnlinePlayers(html) {
-  const players = [];
-  const cells = html.match(/<td\b[^>]*class=["'][^"']*\bname\b[^"']*["'][^>]*>[\s\S]*?<\/td>/gi) || [];
-  for (const cell of cells) {
-    const badges = [...cell.matchAll(/<span\b[^>]*class=["'][^"']*\bbadge\b[^"']*["'][^>]*>([\s\S]*?)<\/span>/gi)]
-      .map(m => decodeHtml(m[1].replace(/<[^>]+>/g, '')).trim().toUpperCase());
+  const players = [], seen = new Set();
+  const rows = html.match(/<tr\b[^>]*>[\s\S]*?<\/tr>/gi) || [];
+  for (const row of rows) {
+    const rawCells = [...row.matchAll(/<t[dh]\b[^>]*>([\s\S]*?)<\/t[dh]>/gi)].map(m => m[1]);
+    if (rawCells.length < 4) continue;
+    const cells = rawCells.map(cleanCell);
+    if (cells.some(v => /personagem|character/i.test(v)) && cells.some(v => /guild/i.test(v))) continue;
+    const badges = [...row.matchAll(/<span\b[^>]*class=["'][^"']*\bbadge\b[^"']*["'][^>]*>([\s\S]*?)<\/span>/gi)].map(m => cleanCell(m[1]).toUpperCase());
     if (!badges.includes('ON')) continue;
-    const beforeFirstSpan = cell.split(/<span\b/i)[0];
-    const nickname = decodeHtml(beforeFirstSpan.replace(/^<td\b[^>]*>/i, '').replace(/<[^>]+>/g, '')).replace(/\s+/g, ' ').trim();
-    if (nickname && !players.some(x => x.toLowerCase() === nickname.toLowerCase())) players.push(nickname);
+    let nickname='', guild='', huntingLevel=null;
+    if (cells.length >= 6) {
+      nickname=cells[1]; guild=cells[3]; huntingLevel=cells[5];
+    } else {
+      nickname=cells[0]; guild=cells[Math.max(1,cells.length-3)]; huntingLevel=cells[cells.length-1];
+    }
+    nickname=String(nickname).replace(/\bON\b/gi,'').replace(/\s+/g,' ').trim();
+    guild=String(guild||'').replace(/^[-–—]+$/,'').trim();
+    const match=String(huntingLevel||'').match(/\d[\d.,]*/);
+    huntingLevel=match ? Number(match[0].replace(/\./g,'').replace(',','.')) : null;
+    const key=nickname.toLowerCase();
+    if (!nickname || seen.has(key)) continue;
+    seen.add(key);players.push({nickname,guild:guild||'',huntingLevel:Number.isFinite(huntingLevel)?huntingLevel:null,online:true});
   }
   return players;
 }
-
 async function requireAdmin(req) {
   const supabaseUrl = process.env.SUPABASE_URL;
   const supabaseKey = process.env.SUPABASE_ANON_KEY;
