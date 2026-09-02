@@ -23,22 +23,18 @@ function cleanCell(value) {
 }
 function extractOnlinePlayers(html) {
   const players=[],seen=new Set(),rows=html.match(/<tr\b[^>]*>[\s\S]*?<\/tr>/gi)||[];
-  let columns={nickname:1,guild:3,hunting:5};
   for(const row of rows){
     const raw=[...row.matchAll(/<t[dh]\b[^>]*>([\s\S]*?)<\/t[dh]>/gi)].map(m=>m[1]);
-    if(!raw.length)continue;
-    const cells=raw.map(cleanCell),lower=cells.map(x=>x.toLowerCase());
-    if(lower.some(x=>/personagem|character/.test(x))){
-      const nick=lower.findIndex(x=>/personagem|character/.test(x)),guild=lower.findIndex(x=>/^guild$|guilda/.test(x)),hunt=lower.findIndex(x=>/hunting\s*level|hunt\s*level/.test(x));
-      if(nick>=0)columns.nickname=nick;if(guild>=0)columns.guild=guild;if(hunt>=0)columns.hunting=hunt;continue;
-    }
-    const badges=[...row.matchAll(/<span\b[^>]*class=["'][^"']*\bbadge\b[^"']*["'][^>]*>([\s\S]*?)<\/span>/gi)].map(m=>cleanCell(m[1]).toUpperCase());
-    if(!badges.includes('ON'))continue;
-    let nickname=cells[columns.nickname]||'',guild=cells[columns.guild]||'',huntingLevel=cells[columns.hunting]||'';
-    nickname=nickname.replace(/\b(?:ON|OFF|MEGA\s*VIP|VIP)\b/gi,'').replace(/\s+/g,' ').trim();
-    guild=guild.replace(/\b(?:ON|OFF)\b/gi,'').replace(/^[-–—]+$/,'').trim();
-    const hm=String(huntingLevel).match(/\d[\d.,]*/);huntingLevel=hm?Number(hm[0].replace(/\./g,'').replace(',','.')):null;
-    const key=nickname.toLowerCase();if(!nickname||seen.has(key))continue;seen.add(key);players.push({nickname,guild:guild||'',huntingLevel:Number.isFinite(huntingLevel)?huntingLevel:null,online:true});
+    if(raw.length<6)continue;
+    const cells=raw.map(cleanCell);
+    if(/personagem|character/i.test(cells.join(' ')))continue;
+    const isOnline=/class=["'][^"']*\bbadge\b[^"']*["'][^>]*>\s*ON\s*</i.test(row)||/\bON\b/i.test(cells[1]);
+    if(!isOnline)continue;
+    let nickname=cells[1].replace(/\bMEGA\s*VIP\b/gi,'').replace(/\bVIP\b/gi,'').replace(/\bON\b/gi,'').replace(/\s+/g,' ').trim();
+    let guild=cells[3].replace(/\bON\b/gi,'').replace(/^[-–—]+$/,'').trim();
+    const hm=String(cells[5]).match(/\d[\d.,]*/);const huntingLevel=hm?Number(hm[0].replace(/\./g,'').replace(',','.')):null;
+    const key=nickname.toLowerCase();if(!nickname||seen.has(key))continue;
+    seen.add(key);players.push({nickname,guild:guild||'',huntingLevel:Number.isFinite(huntingLevel)?huntingLevel:null,online:true});
   }
   return players;
 }
