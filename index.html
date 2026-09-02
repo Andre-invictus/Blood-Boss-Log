@@ -17,6 +17,19 @@
 .online-dot{grid-column:1!important}.online-name{grid-column:2!important;min-width:0!important}.online-guild{grid-column:3!important;display:block!important;min-width:0!important;max-width:none!important;text-align:left!important}.online-hl{grid-column:4!important}.online-tag{grid-column:5!important}.online-classify{grid-column:2/6!important;width:100%!important;min-width:0!important;margin-top:2px!important}.online-rule-source{display:none!important}
 @media(max-width:860px){.online-list{grid-template-columns:1fr!important}}
 @media(max-width:520px){.online-item{grid-template-columns:12px minmax(90px,1fr) 58px auto!important}.online-guild{grid-column:2/5!important;grid-row:2!important}.online-hl{grid-column:3!important;grid-row:1!important}.online-tag{grid-column:4!important;grid-row:1!important}.online-classify{grid-column:2/5!important;grid-row:3!important}}
+
+/* Hunt Online compacto V21.3 */
+.online-list{display:grid!important;grid-template-columns:repeat(auto-fill,minmax(280px,1fr))!important;gap:9px!important}
+.online-item{display:grid!important;grid-template-columns:10px minmax(78px,1fr) auto auto!important;grid-template-rows:34px!important;align-items:center!important;gap:8px!important;min-width:0!important;width:100%!important;min-height:54px!important;padding:9px 10px!important;overflow:visible!important;border-radius:8px!important}
+.online-dot{grid-column:1!important;grid-row:1!important;width:8px!important;height:8px!important}
+.online-name{grid-column:2!important;grid-row:1!important;min-width:0!important;font-size:.83rem!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important}
+.online-guild{display:none!important}
+.online-hl{display:none!important}
+.online-tag{grid-column:3!important;grid-row:1!important;font-size:.6rem!important;padding:4px 7px!important}
+.online-classify{grid-column:4!important;grid-row:1!important;width:96px!important;min-width:96px!important;max-width:96px!important;height:34px!important;margin:0!important;padding:5px 8px!important;font-size:.68rem!important}
+.online-rule-source{display:none!important}
+@media(max-width:700px){.online-list{grid-template-columns:1fr!important}}
+@media(max-width:360px){.online-item{grid-template-columns:10px minmax(70px,1fr) auto!important}.online-tag{grid-column:3!important}.online-classify{grid-column:2/4!important;grid-row:2!important;width:100%!important;max-width:none!important}.online-item{grid-template-rows:34px 34px!important}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -140,7 +153,7 @@ async function busy(btn,fn){if(S.busy)return;S.busy=true;btn.disabled=true;try{a
 $('#loginLanguage').onchange=e=>setLang(e.target.value);$('#siteLanguage').onchange=e=>setLang(e.target.value);$('#admOpen').onclick=()=>$('#admin').showModal();$('#admClose').onclick=()=>$('#admin').close();$('#addNick').onclick=()=>{$('#newNick').value.split(',').map(x=>x.trim()).filter(Boolean).forEach(n=>{if(!S.members.some(x=>x.toLowerCase()===n.toLowerCase()))S.members.push(n)});$('#newNick').value='';S.membersDirty=true;members()};$('#saveMembers').onclick=()=>busy($('#saveMembers'),async()=>{await api('updateMembers',{nicks:S.members.join(','),requestId:rid()});S.membersDirty=false;alert(tr('listSaved'));load()});$('#score').onclick=()=>busy($('#score'),async()=>{await api('addManualDelta',{nick:$('#nick').value,blue:$('#blue').value,red:$('#red').value,requestId:rid()});alert(tr('scoreSaved'));load()});$('#addDashboardNick').onclick=()=>{const n=$('#dashboardNick').value.trim();if(n&&!S.dashboardPlayers.some(x=>(x.nick||x).toLowerCase()===n.toLowerCase()))S.dashboardPlayers.push({nick:n,active:true,status:'NOVO'});$('#dashboardNick').value='';S.dashboardDirty=true;dashboardPlayers()};$('#saveDashboardPlayers').onclick=()=>busy($('#saveDashboardPlayers'),async()=>{await api('updateDashboardPlayers',{nicks:S.dashboardPlayers.map(x=>x.nick||x).join(','),requestId:rid()});S.dashboardDirty=false;alert(tr('monitorsSaved'));await load()});$('#syncDashboardNow').onclick=()=>busy($('#syncDashboardNow'),async()=>{const j=await api('syncDashboardHunt',{requestId:rid()});alert(tr('syncComplete')+`: ${j.created||0}`);await load()});$('#addRookie').onclick=()=>{$('#newRookie').value.split(',').map(x=>x.trim()).filter(Boolean).forEach(n=>{if(!S.rookies.some(x=>x.toLowerCase()===n.toLowerCase()))S.rookies.push(n)});$('#newRookie').value='';S.rookiesDirty=true;rookies();members()};$('#saveRookies').onclick=()=>busy($('#saveRookies'),async()=>{await api('updateRookies',{nicks:S.rookies.join(','),requestId:rid()});S.rookiesDirty=false;rookies();alert(tr('rookiesSaved'));load()});$('#report').onclick=()=>busy($('#report'),async()=>{let j=await api('downloadPDF',{startDate:$('#start').value,endDate:$('#end').value}),a=document.createElement('a');a.href='data:application/pdf;base64,'+j.pdfBase64;a.download='Relatorio_Hunt.pdf';a.click()});
 setLang(S.lang);sb.auth.getSession().then(({data})=>accept(data.session).then(ok=>{if(!ok){$('#login').classList.remove('hidden');document.documentElement.classList.add('locked')}}));
 </script>
-<script src="/enhancements.js?v=21.2"></script>
+<script src="/enhancements.js?v=21.3"></script>
 <script src="/battle-theme.js?v=16"></script>
 <script src="/access-analytics.js?v=18.2"></script>
 <script src="/medusa-timeline.js?v=20.3"></script>
